@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendrAI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    *{font-family:'Inter',sans-serif;box-sizing:border-box;}
+    body{background:#0B0F1A;color:#E2E8F0;}
+    :root{--green:#25D366;--card:#111827;--border:rgba(255,255,255,0.07);}
+    .sidebar{width:240px;min-height:100vh;background:#0F172A;border-right:1px solid var(--border);position:fixed;top:0;left:0;z-index:40;transition:transform .3s;overflow-y:auto;}
+    .sidebar-link{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;cursor:pointer;transition:all .2s;color:#94A3B8;text-decoration:none;font-size:.875rem;margin:2px 8px;}
+    .sidebar-link:hover,.sidebar-link.active{background:rgba(37,211,102,.1);color:#25D366;}
+    .main{margin-left:240px;min-height:100vh;}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:all .2s;}
+    .card:hover{border-color:rgba(37,211,102,.2);}
+    .btn-green{background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;padding:9px 20px;border-radius:10px;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;}
+    .btn-green:hover{opacity:.9;transform:translateY(-1px);}
+    .btn-outline{background:rgba(255,255,255,.05);color:#CBD5E1;border:1px solid rgba(255,255,255,.1);padding:8px 16px;border-radius:10px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-outline:hover{background:rgba(255,255,255,.09);}
+    .btn-red{background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.2);padding:6px 14px;border-radius:8px;font-size:.75rem;font-weight:600;cursor:pointer;}
+    .badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.7rem;font-weight:700;}
+    .badge-green{background:rgba(37,211,102,.15);color:#25D366;}
+    .badge-blue{background:rgba(59,130,246,.15);color:#60A5FA;}
+    .badge-yellow{background:rgba(245,158,11,.15);color:#FCD34D;}
+    .badge-red{background:rgba(239,68,68,.15);color:#F87171;}
+    .badge-gray{background:rgba(100,116,139,.15);color:#94A3B8;}
+    .inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;color:white;font-size:.85rem;outline:none;transition:border-color .2s;}
+    .inp:focus{border-color:#25D366;}
+    .inp::placeholder{color:#4B5563;}
+    select.inp option{background:#1F2937;}
+    textarea.inp{resize:vertical;min-height:80px;}
+    .tab{padding:8px 18px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;color:#64748B;background:transparent;border:none;transition:all .2s;}
+    .tab.active{background:rgba(37,211,102,.1);color:#25D366;}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:12px 16px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748B;border-bottom:1px solid var(--border);}
+    td{padding:13px 16px;font-size:.83rem;color:#CBD5E1;border-bottom:1px solid rgba(255,255,255,.04);}
+    tr:hover td{background:rgba(255,255,255,.02);}
+    .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.1);border-top-color:#25D366;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .toast{position:fixed;bottom:20px;right:20px;z-index:999;transform:translateY(100px);opacity:0;transition:all .4s;min-width:260px;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .plan-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:.72rem;font-weight:800;letter-spacing:.06em;}
+    .plan-free{background:rgba(100,116,139,.2);color:#94A3B8;}
+    .plan-starter{background:rgba(59,130,246,.2);color:#60A5FA;}
+    .plan-growth{background:rgba(37,211,102,.2);color:#25D366;}
+    .plan-pro{background:rgba(168,85,247,.2);color:#C084FC;}
+    .progress-bar{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#25D366,#128C7E);border-radius:4px;transition:width .8s ease;}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal{background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+    .feature-locked{opacity:.4;pointer-events:none;position:relative;}
+    .lock-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#FCD34D;font-weight:700;pointer-events:all;cursor:pointer;}
+    .upload-zone{border:2px dashed rgba(37,211,102,.3);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;}
+    .upload-zone:hover{border-color:#25D366;background:rgba(37,211,102,.05);}
+    .step-indicator{display:flex;align-items:center;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+    .step{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;transition:all .3s;}
+    .step.done{background:#25D366;color:white;}
+    .step.active{background:rgba(37,211,102,.2);border:2px solid #25D366;color:#25D366;}
+    .step.pending{background:rgba(255,255,255,.05);color:#64748B;}
+    .step-line{flex:1;height:2px;background:rgba(255,255,255,.08);min-width:20px;}
+    .step-line.done{background:#25D366;}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="p-5 border-b border-white/5">
+    <div class="flex items-center gap-2 mb-3">
+      <div style="width:34px;height:34px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;">🤖</div>
+      <span class="font-black text-lg">Vendr<span style="color:#25D366">AI</span></span>
+    </div>
+    <div id="userBadge" class="text-xs text-gray-500">Loading...</div>
+    <div id="planBadge" class="mt-2"></div>
+  </div>
+
+  <nav class="p-3 space-y-0.5">
+    <a onclick="show('overview')"   class="sidebar-link active" id="nav-overview">📊 Overview</a>
+    <a onclick="show('onboarding')" class="sidebar-link" id="nav-onboarding">🚀 Setup Wizard</a>
+    <a onclick="show('products')"   class="sidebar-link" id="nav-products">🛍️ Products</a>
+    <a onclick="show('orders')"     class="sidebar-link" id="nav-orders">📦 Orders</a>
+    <a onclick="show('contacts')"   class="sidebar-link" id="nav-contacts">👥 Contacts</a>
+    <a onclick="show('kb')"         class="sidebar-link" id="nav-kb">📚 Knowledge Base</a>
+    <a onclick="show('ailog')"      class="sidebar-link" id="nav-ailog">🤖 AI Learning</a>
+    <a onclick="show('broadcast')"  class="sidebar-link" id="nav-broadcast">📣 Broadcast</a>
+    <a onclick="show('referral')"   class="sidebar-link" id="nav-referral">🚀 Referrals</a>
+    <a onclick="show('settings')"   class="sidebar-link" id="nav-settings">⚙️ Settings</a>
+    <a onclick="show('profile')"    class="sidebar-link" id="nav-profile">👤 Profile</a>
+  </nav>
+
+  <div class="p-4 border-t border-white/5 mt-4">
+    <a href="pricing.html" class="btn-green w-full block text-center text-xs mb-2">⚡ Upgrade Plan</a>
+    <button onclick="logout()" class="btn-outline w-full text-xs">🚪 Logout</button>
+  </div>
+</aside>
+
+<!-- MOBILE TOP NAV -->
+<div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gray-950/95 backdrop-blur border-b border-white/5 px-4 py-3 flex items-center justify-between">
+  <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="text-gray-400 text-xl">☰</button>
+  <span class="font-black">Vendr<span style="color:#25D366">AI</span></span>
+  <button onclick="logout()" class="text-xs text-gray-400">Logout</button>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="main pt-0 md:pt-0">
+
+  <!-- ── OVERVIEW ── -->
+  <section id="sec-overview" class="p-6 md:p-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <div>
+        <h1 class="text-2xl font-black">Dashboard Overview</h1>
+        <p id="welcomeMsg" class="text-gray-400 text-sm mt-1">Welcome back!</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="loadOverview()" class="btn-outline text-xs">🔄 Refresh</button>
+        <button onclick="show('broadcast')" class="btn-green text-xs">📣 Broadcast</button>
+      </div>
+    </div>
+
+    <!-- Trial warning -->
+    <div id="trialBanner" class="hidden mb-6 bg-yellow-950/40 border border-yellow-500/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+      <div class="text-sm text-yellow-300">⚠️ <strong>Free trial active.</strong> <span id="trialDays"></span> days remaining. Upgrade to keep your bot running!</div>
+      <a href="pricing.html" class="btn-green text-xs shrink-0">Upgrade Now</a>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card"><div class="text-gray-400 text-xs mb-2">Contacts</div><div class="text-2xl font-black" style="color:#25D366" id="s-contacts">—</div></div>
+      <div class="card"><div class="text-gray-400 text-xs mb-2">Orders</div><div class="text-2xl font-black" style="color:#25D366" id="s-orders">—</div></div>
+      <div class="card"><div class="text-gray-400 text-xs mb-2">Revenue</div><div class="text-2xl font-black" style="color:#25D366" id="s-revenue">—</div></div>
+      <div class="card"><div class="text-gray-400 text-xs mb-2">Products</div><div class="text-2xl font-black" style="color:#25D366" id="s-products">—</div></div>
+    </div>
+
+    <!-- Reply Usage -->
+    <div class="card mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-bold text-sm">Monthly Reply Usage</h3>
+        <span id="usagePct" class="text-sm text-green-400 font-bold">0%</span>
+      </div>
+      <div class="progress-bar mb-2"><div class="progress-fill" id="usageBar" style="width:0%"></div></div>
+      <div class="flex justify-between text-xs text-gray-500">
+        <span id="usageLow">0 used</span>
+        <span id="usageHigh">100 limit</span>
+      </div>
+      <div class="flex gap-6 mt-3 text-xs">
+        <span><span class="text-green-400 font-bold" id="s-kbhits">0</span> <span class="text-gray-500">KB replies (instant)</span></span>
+        <span><span class="text-blue-400 font-bold" id="s-aicalls">0</span> <span class="text-gray-500">AI replies</span></span>
+      </div>
+    </div>
+
+    <!-- Onboarding Progress -->
+    <div id="onboardingProgress" class="card mb-6">
+      <h3 class="font-bold text-sm mb-4">🚀 Setup Progress</h3>
+      <div id="progressSteps" class="space-y-3"></div>
+      <button onclick="show('onboarding')" class="btn-green text-xs mt-4">Continue Setup →</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="card cursor-pointer" onclick="show('products')"><div class="text-2xl mb-2">🛍️</div><div class="font-bold text-sm">Add Products</div><div class="text-xs text-gray-400 mt-1">Add items to your catalog</div></div>
+      <div class="card cursor-pointer" onclick="show('kb')"><div class="text-2xl mb-2">📚</div><div class="font-bold text-sm">Train Your Bot</div><div class="text-xs text-yellow-400 mt-1" id="kbPending">0 AI responses to review</div></div>
+      <div class="card cursor-pointer" onclick="show('referral')"><div class="text-2xl mb-2">🎁</div><div class="font-bold text-sm">Refer & Earn</div><div class="text-xs text-green-400 mt-1" id="refCount">0 referrals</div></div>
+    </div>
+  </section>
+
+  <!-- ── SETUP WIZARD (ONBOARDING) ── -->
+  <section id="sec-onboarding" class="hidden p-6 md:p-8">
+    <h2 class="text-2xl font-black mb-2">🚀 Setup Wizard</h2>
+    <p class="text-gray-400 text-sm mb-8">Complete each step to get your bot fully configured. Takes about 10 minutes!</p>
+
+    <!-- Step tabs -->
+    <div class="flex gap-2 mb-8 flex-wrap">
+      <button class="tab active" id="wtab-1" onclick="wStep(1)">1. Business Info</button>
+      <button class="tab" id="wtab-2" onclick="wStep(2)">2. WhatsApp</button>
+      <button class="tab" id="wtab-3" onclick="wStep(3)">3. Bot Messages</button>
+      <button class="tab" id="wtab-4" onclick="wStep(4)">4. Products</button>
+    </div>
+
+    <!-- Step 1: Business Info -->
+    <div id="wstep-1" class="space-y-5 max-w-2xl">
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Business Name *</label><input id="biz-name" class="inp" placeholder="e.g. Amara Fashion Boutique"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Business Category</label>
+          <select id="biz-cat" class="inp">
+            <option value="fashion">👗 Fashion & Clothing</option>
+            <option value="food">🍔 Food & Beverages</option>
+            <option value="tech">💻 Tech & Electronics</option>
+            <option value="beauty">💄 Beauty & Cosmetics</option>
+            <option value="health">💊 Health & Wellness</option>
+            <option value="education">📚 Education & Courses</option>
+            <option value="agriculture">🌾 Agriculture</option>
+            <option value="services">🔧 Services</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">Business Description</label><textarea id="biz-desc" class="inp" placeholder="Tell customers what you sell and what makes you special..."></textarea></div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Support Phone Number</label><input id="biz-cphone" class="inp" placeholder="+2348012345678"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Support Email</label><input id="biz-cemail" class="inp" placeholder="support@yourbusiness.com"/></div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">City</label><input id="biz-city" class="inp" placeholder="Lagos"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">State</label><input id="biz-state" class="inp" placeholder="Lagos State"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Country</label><input id="biz-country" class="inp" value="Nigeria"/></div>
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">Delivery Areas (comma-separated)</label><input id="biz-dareas" class="inp" placeholder="Lagos, Abuja, Nationwide"/></div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Delivery Fee (₦)</label><input id="biz-dfee" type="number" class="inp" placeholder="500"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Delivery Days</label><input id="biz-ddays" class="inp" placeholder="1-3 business days"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Free Delivery Above (₦)</label><input id="biz-dfree" type="number" class="inp" placeholder="20000"/></div>
+      </div>
+      <button onclick="saveBusinessInfo()" class="btn-green px-8 py-3">Save & Continue →</button>
+    </div>
+
+    <!-- Step 2: WhatsApp -->
+    <div id="wstep-2" class="hidden space-y-5 max-w-2xl">
+      <div class="bg-blue-950/30 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-300 mb-4">
+        📋 <strong>Where to find these:</strong> Go to <strong>developers.facebook.com</strong> → Your VendrAI App → WhatsApp → API Setup
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">WhatsApp Phone Number ID *</label><input id="wa-phoneid" class="inp" placeholder="e.g. 123456789012345"/></div>
+      <div><label class="block text-xs text-gray-400 mb-1">WhatsApp Access Token *</label><input id="wa-token" type="password" class="inp" placeholder="EAAxxxxxxxx..."/></div>
+      <div><label class="block text-xs text-gray-400 mb-1">WhatsApp Business Account ID</label><input id="wa-bizid" class="inp" placeholder="Optional — found in API Setup"/></div>
+      <hr class="border-white/10"/>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Paystack (Optional — for payments)</div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Paystack Public Key</label><input id="ps-pub" class="inp" placeholder="pk_live_..."/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Paystack Secret Key</label><input id="ps-sec" type="password" class="inp" placeholder="sk_live_..."/></div>
+      </div>
+      <div class="bg-green-950/30 border border-green-500/20 rounded-xl p-4 text-sm text-green-300">
+        🔒 Your tokens are stored securely and never exposed publicly. Only your bot can access them.
+      </div>
+      <div class="flex gap-3">
+        <button onclick="wStep(1)" class="btn-outline px-6 py-3">← Back</button>
+        <button onclick="saveWhatsApp()" class="btn-green px-8 py-3">Save & Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Bot Messages -->
+    <div id="wstep-3" class="hidden space-y-5 max-w-2xl">
+      <div><label class="block text-xs text-gray-400 mb-1">AI Personality</label>
+        <select id="bot-personality" class="inp">
+          <option value="friendly">😊 Friendly & Warm (Recommended)</option>
+          <option value="professional">👔 Professional & Formal</option>
+          <option value="casual">😄 Casual & Fun</option>
+        </select>
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">Greeting Message (first message a customer receives)</label><textarea id="bot-greeting" class="inp" placeholder="Hello! 👋 Welcome to our store! How can I help you? Type MENU for options."></textarea></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Fallback Message (when bot doesn't understand)</label><textarea id="bot-fallback" class="inp" placeholder="I'm not sure about that. Type MENU for options or CONTACT to reach our team! 😊"></textarea></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Away Message (when business hours are closed)</label><textarea id="bot-away" class="inp" placeholder="We're currently away but will respond soon! Type MENU for quick options."></textarea></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Special Instructions for AI (optional)</label><textarea id="bot-custom" class="inp" placeholder="e.g. Always mention our free delivery offer. Never give discounts without approval. Always be polite..."></textarea></div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Business Hours Start</label><input id="bot-start" type="time" class="inp" value="08:00"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Business Hours End</label><input id="bot-end" type="time" class="inp" value="20:00"/></div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="wStep(2)" class="btn-outline px-6 py-3">← Back</button>
+        <button onclick="saveBotMessages()" class="btn-green px-8 py-3">Save & Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Products -->
+    <div id="wstep-4" class="hidden max-w-2xl">
+      <div class="bg-green-950/30 border border-green-500/20 rounded-xl p-4 text-sm text-green-300 mb-6">
+        🎉 <strong>Setup Complete!</strong> Your bot is now configured. Add your products to complete the setup.
+      </div>
+      <div class="grid md:grid-cols-2 gap-4 mb-6">
+        <div class="card cursor-pointer text-center" onclick="show('products')">
+          <div class="text-3xl mb-3">📝</div>
+          <div class="font-bold mb-1">Add Products Manually</div>
+          <div class="text-xs text-gray-400">Add one product at a time using a form</div>
+        </div>
+        <div id="excelCard" class="card cursor-pointer text-center" onclick="show('products')">
+          <div class="text-3xl mb-3">📊</div>
+          <div class="font-bold mb-1">Import from Excel</div>
+          <div class="text-xs text-gray-400">Upload your existing product spreadsheet</div>
+          <div class="text-xs text-yellow-400 mt-1" id="excelPlanNote"></div>
+        </div>
+      </div>
+      <button onclick="show('overview')" class="btn-green px-8 py-3 w-full">Go to Dashboard →</button>
+    </div>
+  </section>
+
+  <!-- ── PRODUCTS ── -->
+  <section id="sec-products" class="hidden p-6 md:p-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div>
+        <h2 class="text-2xl font-black">🛍️ Products</h2>
+        <p class="text-gray-400 text-sm mt-1">Manage your catalog. Customers can browse and order via WhatsApp.</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <button onclick="openAddProduct()" class="btn-green text-sm">+ Add Product</button>
+        <button onclick="openImport()" id="importBtn" class="btn-outline text-sm">📊 Import Excel</button>
+        <a id="templateBtn" href="#" onclick="downloadTemplate(event)" class="btn-outline text-sm">⬇️ Template</a>
+      </div>
+    </div>
+
+    <!-- Excel Import Zone (hidden by default) -->
+    <div id="importZone" class="hidden card mb-6">
+      <h3 class="font-bold mb-4">📊 Import Products from Excel/CSV</h3>
+      <div id="planImportWarning" class="hidden bg-yellow-950/30 border border-yellow-500/20 rounded-xl p-3 text-sm text-yellow-300 mb-4">
+        ⚠️ Excel import is available on Growth and Pro plans. <a href="pricing.html" class="underline">Upgrade here →</a>
+      </div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="text-4xl mb-3">📊</div>
+        <div class="font-bold mb-1">Click to upload your Excel or CSV file</div>
+        <div class="text-xs text-gray-400">Or drag and drop it here</div>
+        <div class="text-xs text-gray-500 mt-2">Supported: .xlsx, .xls, .csv · Max 1000 rows</div>
+      </div>
+      <input type="file" id="fileInput" class="hidden" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)"/>
+      <div id="importPreview" class="hidden mt-4">
+        <div class="text-sm text-gray-400 mb-3" id="importPreviewMsg"></div>
+        <div id="importPreviewTable" class="overflow-x-auto"></div>
+        <div class="flex gap-3 mt-4">
+          <button onclick="document.getElementById('importZone').classList.add('hidden')" class="btn-outline text-xs">Cancel</button>
+          <button onclick="submitImport()" class="btn-green text-xs" id="submitImportBtn">Import Products</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="productsList" class="space-y-3"><div class="text-center py-8 text-gray-500 text-sm"><div class="spinner mx-auto mb-3"></div>Loading products...</div></div>
+  </section>
+
+  <!-- ── ORDERS ── -->
+  <section id="sec-orders" class="hidden p-6 md:p-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div><h2 class="text-2xl font-black">📦 Orders</h2><p class="text-gray-400 text-sm mt-1">Manage all orders placed via WhatsApp.</p></div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="tab active" onclick="filterOrders('all')">All</button>
+        <button class="tab" onclick="filterOrders('pending')">Pending</button>
+        <button class="tab" onclick="filterOrders('paid')">Paid</button>
+        <button class="tab" onclick="filterOrders('shipped')">Shipped</button>
+        <button class="tab" onclick="filterOrders('delivered')">Delivered</button>
+      </div>
+    </div>
+    <div class="card overflow-hidden"><div id="ordersTable"><div class="text-center py-8 text-gray-500 text-sm"><div class="spinner mx-auto mb-3"></div>Loading orders...</div></div></div>
+  </section>
+
+  <!-- ── CONTACTS ── -->
+  <section id="sec-contacts" class="hidden p-6 md:p-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div><h2 class="text-2xl font-black">👥 Contacts</h2><p class="text-gray-400 text-sm mt-1">All customers who've messaged your bot.</p></div>
+      <div class="flex gap-3"><input id="contactSearch" class="inp text-sm" style="width:200px" placeholder="🔍 Search name or phone..." oninput="loadContacts()"/></div>
+    </div>
+    <div class="card overflow-hidden"><div id="contactsTable"><div class="text-center py-8 text-gray-500 text-sm"><div class="spinner mx-auto mb-3"></div>Loading contacts...</div></div></div>
+  </section>
+
+  <!-- ── KNOWLEDGE BASE ── -->
+  <section id="sec-kb" class="hidden p-6 md:p-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div><h2 class="text-2xl font-black">📚 Knowledge Base</h2><p class="text-gray-400 text-sm mt-1">Pre-set answers your bot uses instantly — free, no AI needed.</p></div>
+      <button onclick="document.getElementById('addKbModal').classList.remove('hidden')" class="btn-green text-sm">+ Add Answer</button>
+    </div>
+    <div class="mb-4 flex gap-3"><input id="kbSearch" class="inp max-w-sm text-sm" placeholder="🔍 Search keywords..." oninput="filterKB()"/></div>
+    <div id="kbEntries" class="space-y-3"><div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div></div>
+  </section>
+
+  <!-- ── AI LEARNING ── -->
+  <section id="sec-ailog" class="hidden p-6 md:p-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
+      <div><h2 class="text-2xl font-black">🤖 AI Self-Healing Loop</h2><p class="text-gray-400 text-sm mt-1">Review AI answers → 1-click promote to KB for instant future replies.</p></div>
+      <button onclick="autoPromote()" class="btn-green text-sm">⚡ Auto-Promote All</button>
+    </div>
+    <div class="bg-blue-950/30 border border-blue-500/20 rounded-xl p-4 text-sm text-blue-300 mb-6">
+      ℹ️ When AI answers a question, it's logged here. Promote good answers to KB — they'll reply <strong>instantly</strong> next time (free, no AI call needed).
+    </div>
+    <div id="aiLogEntries" class="space-y-4"><div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div></div>
+  </section>
+
+  <!-- ── BROADCAST ── -->
+  <section id="sec-broadcast" class="hidden p-6 md:p-8">
+    <h2 class="text-2xl font-black mb-2">📣 Broadcast</h2>
+    <p class="text-gray-400 text-sm mb-8">Send WhatsApp messages to your contacts in bulk.</p>
+    <div id="broadcastLockMsg" class="hidden bg-yellow-950/30 border border-yellow-500/20 rounded-2xl p-6 text-center mb-6">
+      <div class="text-3xl mb-3">🔒</div>
+      <div class="font-bold text-yellow-300 mb-2">Broadcast requires Starter plan or higher</div>
+      <div class="text-sm text-gray-400 mb-4">Upgrade to send promotional messages to your customers.</div>
+      <a href="pricing.html" class="btn-green inline-block px-8 py-3 text-sm no-underline">Upgrade Now →</a>
+    </div>
+    <div id="broadcastForm" class="grid md:grid-cols-2 gap-8">
+      <div class="card">
+        <h3 class="font-bold mb-5 text-sm">Compose Message</h3>
+        <div class="space-y-4">
+          <div><label class="block text-xs text-gray-400 mb-1">Title (internal note)</label><input id="broad-title" class="inp" placeholder="Weekend Promo"/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Message *</label><textarea id="broad-msg" class="inp" rows="5" placeholder="Hey {name}! 🎉 We have a special offer for you..."></textarea><p class="text-xs text-gray-600 mt-1">Use {name} for personalization</p></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Target Tags (optional)</label><input id="broad-tags" class="inp" placeholder="e.g. vip, repeat-buyer"/></div>
+          <button onclick="sendBroadcast()" class="btn-green w-full py-3 text-sm">📤 Send Now</button>
+          <div id="broadResult" class="hidden text-sm p-3 bg-green-950/30 border border-green-500/20 rounded-xl text-green-300"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-bold mb-4 text-sm">💡 Tips</h3>
+        <ul class="space-y-3 text-sm text-gray-400">
+          <li class="flex gap-2"><span class="text-green-400">✓</span> Use {name} for 35% higher response rate</li>
+          <li class="flex gap-2"><span class="text-green-400">✓</span> Send between 8-10 AM or 6-8 PM (WAT)</li>
+          <li class="flex gap-2"><span class="text-green-400">✓</span> Include a clear CTA (Reply ORDER, etc.)</li>
+          <li class="flex gap-2"><span class="text-yellow-400">⚠️</span> Only message opted-in customers</li>
+          <li class="flex gap-2"><span class="text-gray-600">📊</span> <span class="text-gray-400">Limit: <span id="broadLimit">—</span> contacts/blast</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── REFERRALS ── -->
+  <section id="sec-referral" class="hidden p-6 md:p-8">
+    <h2 class="text-2xl font-black mb-2">🚀 Referral Engine</h2>
+    <p class="text-gray-400 text-sm mb-8">Share your link → Friends join → You earn free months!</p>
+    <div class="grid md:grid-cols-2 gap-8">
+      <div class="card">
+        <h3 class="font-bold mb-5 text-sm">Your Referral Code</h3>
+        <div class="bg-gray-800 rounded-xl p-5 text-center mb-5">
+          <div class="text-gray-400 text-xs mb-2">Your unique code</div>
+          <div class="text-3xl font-black text-green-400 tracking-widest" id="refCode">—</div>
+        </div>
+        <div class="mb-4"><label class="block text-xs text-gray-400 mb-1">Shareable link</label>
+          <div class="flex gap-2"><input id="refLink" class="inp text-xs" readonly/><button onclick="copyRef()" class="btn-outline text-xs px-3">Copy</button></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="bg-gray-800 rounded-xl p-3"><div class="text-xl font-black text-green-400" id="totalRefs">0</div><div class="text-xs text-gray-500">Total Referrals</div></div>
+          <div class="bg-gray-800 rounded-xl p-3"><div class="text-xl font-black text-blue-400" id="convRefs">0</div><div class="text-xs text-gray-500">Converted</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-bold mb-4 text-sm">🎁 Reward Structure</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center bg-gray-800 rounded-xl p-3"><div><div class="text-sm font-bold">3 referrals</div><div class="text-xs text-gray-400">Any 3 friends sign up</div></div><div class="text-green-400 font-bold text-sm">+1 Month FREE 🎉</div></div>
+          <div class="flex justify-between items-center bg-gray-800 rounded-xl p-3"><div><div class="text-sm font-bold">10 referrals</div><div class="text-xs text-gray-400">10 successful signups</div></div><div class="text-purple-400 font-bold text-sm">Ambassador 👑</div></div>
+          <div class="flex justify-between items-center bg-gray-800 rounded-xl p-3"><div><div class="text-sm font-bold">Ambassador commission</div><div class="text-xs text-gray-400">On paid upgrades</div></div><div class="text-yellow-400 font-bold text-sm">10% recurring 💰</div></div>
+        </div>
+        <div class="mt-4 text-xs text-gray-400">💡 Share on WhatsApp groups, Instagram, Twitter. When 3 people sign up through your link, your plan upgrades automatically!</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SETTINGS ── -->
+  <section id="sec-settings" class="hidden p-6 md:p-8">
+    <h2 class="text-2xl font-black mb-2">⚙️ Bot Settings</h2>
+    <p class="text-gray-400 text-sm mb-8">Configure how your bot behaves.</p>
+    <div class="grid md:grid-cols-2 gap-6 max-w-4xl">
+      <div class="card">
+        <h3 class="font-bold text-sm mb-5">🤖 Bot Behavior</h3>
+        <div class="space-y-4">
+          <div class="flex justify-between items-center"><div><div class="text-sm font-medium">Auto-Reply</div><div class="text-xs text-gray-400">Bot replies to all messages</div></div><input type="checkbox" id="set-autoreply" onchange="saveSetting('auto_reply',this.checked)" class="w-5 h-5 accent-green-500"/></div>
+          <div class="flex justify-between items-center"><div><div class="text-sm font-medium">AI Enabled</div><div class="text-xs text-gray-400">Qwen AI fires on KB miss</div></div><input type="checkbox" id="set-ai" onchange="saveSetting('ai_enabled',this.checked)" class="w-5 h-5 accent-green-500"/></div>
+          <div class="flex justify-between items-center"><div><div class="text-sm font-medium">Lead Capture</div><div class="text-xs text-gray-400">Save chatters as contacts</div></div><input type="checkbox" id="set-leads" onchange="saveSetting('collect_leads',this.checked)" class="w-5 h-5 accent-green-500"/></div>
+          <div class="flex justify-between items-center"><div><div class="text-sm font-medium">Away Mode</div><div class="text-xs text-gray-400">Send away message to all</div></div><input type="checkbox" id="set-away" onchange="saveSetting('away_mode',this.checked)" class="w-5 h-5 accent-green-500"/></div>
+          <div class="flex justify-between items-center"><div><div class="text-sm font-medium">VendrAI Watermark</div><div class="text-xs text-gray-400">Show "Powered by VendrAI"</div></div><input type="checkbox" id="set-watermark" onchange="saveSetting('watermark',this.checked)" class="w-5 h-5 accent-green-500"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-bold text-sm mb-5">📋 Webhook Info</h3>
+        <div class="space-y-3">
+          <div><label class="block text-xs text-gray-400 mb-1">Your Webhook URL (copy to Meta)</label><div class="flex gap-2"><input id="webhookUrl" class="inp text-xs" readonly/><button onclick="copyWebhook()" class="btn-outline text-xs px-3">Copy</button></div></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Verify Token</label><input id="verifyToken" class="inp text-xs" readonly value="vendrai_secret_2024"/></div>
+          <div class="bg-blue-950/30 border border-blue-500/20 rounded-xl p-3 text-xs text-blue-300">
+            ℹ️ Paste the Webhook URL into Meta Developer → WhatsApp → Configuration → Edit Webhook → Callback URL
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PROFILE ── -->
+  <section id="sec-profile" class="hidden p-6 md:p-8">
+    <h2 class="text-2xl font-black mb-2">👤 My Profile</h2>
+    <p class="text-gray-400 text-sm mb-8">Manage your account details and password.</p>
+    <div class="grid md:grid-cols-2 gap-6 max-w-3xl">
+      <div class="card">
+        <h3 class="font-bold text-sm mb-5">Account Info</h3>
+        <div class="space-y-4">
+          <div><label class="block text-xs text-gray-400 mb-1">Username</label><input id="prof-username" class="inp" readonly/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Email <span id="emailVerBadge"></span></label><input id="prof-email" class="inp" readonly/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Phone</label><input id="prof-phone" class="inp" readonly/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Plan</label><div id="prof-plan" class="font-bold text-green-400">—</div></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Member since</label><div id="prof-since" class="text-sm text-gray-300">—</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="font-bold text-sm mb-5">🔒 Change Password</h3>
+        <div class="space-y-4">
+          <div><label class="block text-xs text-gray-400 mb-1">Current Password</label><input id="pw-current" type="password" class="inp" placeholder="Enter current password"/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">New Password</label><input id="pw-new" type="password" class="inp" placeholder="At least 8 characters"/></div>
+          <div><label class="block text-xs text-gray-400 mb-1">Confirm New Password</label><input id="pw-confirm" type="password" class="inp" placeholder="Repeat new password"/></div>
+          <button onclick="changePassword()" class="btn-green w-full py-3 text-sm">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODALS -->
+
+<!-- Add KB Modal -->
+<div id="addKbModal" class="hidden modal-overlay">
+  <div class="modal">
+    <h3 class="text-xl font-black mb-1">Add Knowledge Base Entry</h3>
+    <p class="text-gray-400 text-sm mb-5">When a customer's message matches the keyword, bot replies instantly — no AI needed.</p>
+    <div class="space-y-4">
+      <div><label class="block text-xs text-gray-400 mb-1">Trigger Keyword / Phrase *</label><input id="kb-kw" class="inp" placeholder="e.g. price, how much, delivery time, do you deliver to Abuja"/><p class="text-xs text-gray-600 mt-1">Separate multiple keywords with spaces or commas</p></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Reply Answer *</label><textarea id="kb-ans" class="inp" rows="4" placeholder="Our prices start from ₦5,000. Type CATALOG to see all products! 🛍️"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs text-gray-400 mb-1">Category</label><select id="kb-cat" class="inp"><option value="general">General</option><option value="product">Product</option><option value="order">Order</option><option value="payment">Payment</option><option value="delivery">Delivery</option><option value="faq">FAQ</option></select></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Language</label><select id="kb-lang" class="inp"><option value="en">English</option><option value="pidgin">Pidgin</option><option value="yo">Yoruba</option><option value="ig">Igbo</option><option value="ha">Hausa</option></select></div>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="document.getElementById('addKbModal').classList.add('hidden')" class="btn-outline flex-1">Cancel</button>
+        <button onclick="addKB()" class="btn-green flex-1">Add to KB</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addProductModal" class="hidden modal-overlay">
+  <div class="modal">
+    <h3 class="text-xl font-black mb-5">Add Product</h3>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="col-span-2"><label class="block text-xs text-gray-400 mb-1">Product Name *</label><input id="p-name" class="inp" placeholder="e.g. Premium Wig 24inch, iPhone 15, Digital Marketing Course"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">SKU / Code</label><input id="p-sku" class="inp" placeholder="WIG-001"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Category</label><input id="p-cat" class="inp" placeholder="fashion, food, tech..."/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Price *</label><input id="p-price" type="number" class="inp" placeholder="15000"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Sale Price (optional)</label><input id="p-saleprice" type="number" class="inp" placeholder="12000"/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Currency</label><select id="p-curr" class="inp"><option value="NGN">NGN (₦)</option><option value="GHS">GHS (₵)</option><option value="KES">KES</option><option value="USD">USD ($)</option></select></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Type</label><select id="p-type" class="inp" onchange="toggleDigital(this.value)"><option value="physical">📦 Physical</option><option value="digital">⚡ Digital</option></select></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Stock Quantity</label><input id="p-stock" type="number" class="inp" placeholder="Blank = unlimited"/></div>
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">Description</label><textarea id="p-desc" class="inp" rows="2" placeholder="Brief product description..."></textarea></div>
+      <div id="digitalFields" class="hidden space-y-3">
+        <div><label class="block text-xs text-gray-400 mb-1">Download Link</label><input id="p-dlink" class="inp" placeholder="https://drive.google.com/..."/></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Access Code</label><input id="p-dcode" class="inp" placeholder="LICENSE-ABC123"/></div>
+      </div>
+      <div><label class="block text-xs text-gray-400 mb-1">Image URL</label><input id="p-img" class="inp" placeholder="https://..."/></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Keywords (comma-separated)</label><input id="p-kw" class="inp" placeholder="wig, hair, fashion, 24inch"/></div>
+      <div class="flex gap-3 pt-2">
+        <button onclick="document.getElementById('addProductModal').classList.add('hidden')" class="btn-outline flex-1">Cancel</button>
+        <button onclick="addProduct()" class="btn-green flex-1">Add Product</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Promote KB Modal -->
+<div id="promoteModal" class="hidden modal-overlay">
+  <div class="modal">
+    <h3 class="text-xl font-black mb-1">✅ Promote to Knowledge Base</h3>
+    <p class="text-gray-400 text-sm mb-5">Edit if needed, then promote. Future identical questions will answer instantly from KB.</p>
+    <input type="hidden" id="promoteLogId"/>
+    <div class="space-y-4">
+      <div><label class="block text-xs text-gray-400 mb-1">Customer's message (will become keyword)</label><input id="promoteKw" class="inp" readonly/></div>
+      <div><label class="block text-xs text-gray-400 mb-1">Answer to save (edit if needed)</label><textarea id="promoteAns" class="inp" rows="4"></textarea></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="block text-xs text-gray-400 mb-1">Category</label><select id="promoteCat" class="inp"><option value="general">General</option><option value="product">Product</option><option value="order">Order</option><option value="payment">Payment</option></select></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Language</label><select id="promoteLang" class="inp"><option value="en">English</option><option value="pidgin">Pidgin</option><option value="yo">Yoruba</option><option value="ig">Igbo</option><option value="ha">Hausa</option></select></div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="document.getElementById('promoteModal').classList.add('hidden')" class="btn-outline flex-1">Cancel</button>
+        <button onclick="confirmPromote()" class="btn-green flex-1">✅ Promote to KB</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast bg-gray-800 border border-white/10 rounded-xl px-5 py-3 text-sm font-medium flex items-center gap-3 shadow-xl">
+  <span id="toastIcon">✅</span><span id="toastMsg">Done!</span>
+</div>
+
+<!-- ══════════════ JAVASCRIPT ══════════════════════════════ -->
+<script>
+const API = 'https://vendrai-api.onrender.com'; // ← UPDATE THIS
+let TOKEN    = '';
+let BIZ      = {};
+let kbData   = [];
+let prodsData = [];
+let importData = [];
+
+// ─────────────────────────────────────────────────────────
+// INIT — Auto-login from localStorage
+// ─────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  TOKEN = localStorage.getItem('vendrai_token');
+  if (!TOKEN) { window.location.href = 'login.html'; return; }
+  await loadUser();
+  const params = new URLSearchParams(location.search);
+  if (params.get('upgraded') === '1') toast('🎉 Plan upgraded successfully!');
+  loadOverview();
+});
+
+async function loadUser() {
+  try {
+    const d = await api('/auth/me');
+    if (!d.success) { logout(); return; }
+    BIZ = d.business;
+    document.getElementById('userBadge').textContent = `@${BIZ.username}`;
+    const planClass = { free:'plan-free', starter:'plan-starter', growth:'plan-growth', pro:'plan-pro' }[BIZ.plan] || 'plan-free';
+    document.getElementById('planBadge').innerHTML = `<span class="plan-badge ${planClass}">${BIZ.plan.toUpperCase()} ${BIZ.isTrial ? '• TRIAL' : ''}</span>`;
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${BIZ.businessName || BIZ.username}! 👋`;
+    document.getElementById('webhookUrl').value = `${API}/webhook/whatsapp`;
+
+    // Trial banner
+    if (BIZ.isTrial && BIZ.trialEndsAt) {
+      const days = Math.ceil((new Date(BIZ.trialEndsAt) - new Date()) / 86400000);
+      if (days <= 7 && days > 0) {
+        document.getElementById('trialBanner').classList.remove('hidden');
+        document.getElementById('trialDays').textContent = days;
+      }
+    }
+
+    // Plan-based features
+    if (!BIZ.planLimits?.broadcasts_enabled) {
+      document.getElementById('broadcastLockMsg')?.classList.remove('hidden');
+      document.getElementById('broadcastForm')?.classList.add('hidden');
+    }
+    document.getElementById('broadLimit').textContent = BIZ.planLimits?.broadcast_limit || 0;
+
+    if (!BIZ.planLimits?.excel_import) {
+      document.getElementById('excelPlanNote').textContent = '🔒 Requires Growth plan';
+    }
+
+    // Profile
+    document.getElementById('prof-username').value  = BIZ.username || '';
+    document.getElementById('prof-email').value     = BIZ.email || '';
+    document.getElementById('prof-phone').value     = BIZ.phone || '';
+    document.getElementById('prof-plan').textContent = BIZ.plan?.toUpperCase() + (BIZ.isTrial ? ' (Trial)' : '');
+    document.getElementById('prof-since').textContent = new Date(BIZ.createdAt || Date.now()).toLocaleDateString();
+    document.getElementById('emailVerBadge').innerHTML = BIZ.emailVerified ? '<span class="badge badge-green ml-1">✓ Verified</span>' : '<span class="badge badge-yellow ml-1">⚠ Unverified</span>';
+
+    // Onboarding prefill
+    if (BIZ.businessName)  document.getElementById('biz-name').value  = BIZ.businessName;
+    if (BIZ.businessDesc)  document.getElementById('biz-desc').value  = BIZ.businessDesc;
+    if (BIZ.city)          document.getElementById('biz-city').value  = BIZ.city;
+    if (BIZ.state)         document.getElementById('biz-state').value = BIZ.state;
+    if (BIZ.country)       document.getElementById('biz-country').value = BIZ.country;
+    if (BIZ.contactPhone)  document.getElementById('biz-cphone').value = BIZ.contactPhone;
+    if (BIZ.contactEmail)  document.getElementById('biz-cemail').value = BIZ.contactEmail;
+    if (BIZ.deliveryFee)   document.getElementById('biz-dfee').value  = BIZ.deliveryFee;
+    if (BIZ.deliveryDays)  document.getElementById('biz-ddays').value = BIZ.deliveryDays;
+    if (BIZ.deliveryAreas?.length) document.getElementById('biz-dareas').value = BIZ.deliveryAreas.join(', ');
+
+    // Settings prefill
+    if (BIZ.settings) {
+      const s = BIZ.settings;
+      if (document.getElementById('set-autoreply'))  document.getElementById('set-autoreply').checked  = s.auto_reply !== false;
+      if (document.getElementById('set-ai'))         document.getElementById('set-ai').checked         = s.ai_enabled !== false;
+      if (document.getElementById('set-leads'))      document.getElementById('set-leads').checked      = s.collect_leads !== false;
+      if (document.getElementById('set-away'))       document.getElementById('set-away').checked       = !!s.away_mode;
+      if (document.getElementById('set-watermark'))  document.getElementById('set-watermark').checked  = s.watermark !== false;
+      if (s.wa_phone_id) document.getElementById('wa-phoneid').value = s.wa_phone_id;
+      if (s.greeting_msg) document.getElementById('bot-greeting').value = s.greeting_msg;
+      if (s.fallback_msg) document.getElementById('bot-fallback').value = s.fallback_msg;
+      if (s.away_msg)     document.getElementById('bot-away').value = s.away_msg;
+      if (s.custom_instructions) document.getElementById('bot-custom').value = s.custom_instructions;
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────────────────
+// API HELPER
+// ─────────────────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type':'application/json', 'x-session-token': TOKEN } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+function toast(msg, type='green') {
+  const icons = { green:'✅', yellow:'⚠️', red:'❌', blue:'ℹ️' };
+  document.getElementById('toastIcon').textContent = icons[type] || '✅';
+  document.getElementById('toastMsg').textContent  = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ─────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────
+function show(name) {
+  document.querySelectorAll('[id^="sec-"]').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById(`sec-${name}`).classList.remove('hidden');
+  document.getElementById(`nav-${name}`)?.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  const loaders = { kb:'loadKB', ailog:'loadAILogs', products:'loadProducts', orders:'loadOrders', contacts:'loadContacts', referral:'loadReferrals', overview:'loadOverview' };
+  if (loaders[name]) window[loaders[name]]();
+}
+
+// ─────────────────────────────────────────────────────────
+// OVERVIEW
+// ─────────────────────────────────────────────────────────
+async function loadOverview() {
+  try {
+    const d = await api('/dashboard/stats');
+    if (!d.success) return;
+    const s = d.stats;
+    document.getElementById('s-contacts').textContent = s.total_contacts || 0;
+    document.getElementById('s-orders').textContent   = s.total_orders || 0;
+    document.getElementById('s-revenue').textContent  = '₦' + Number(s.total_revenue||0).toLocaleString();
+    document.getElementById('s-products').textContent = s.total_products || 0;
+    document.getElementById('s-kbhits').textContent   = s.kb_hits || 0;
+    document.getElementById('s-aicalls').textContent  = s.total_ai_calls || 0;
+    document.getElementById('kbPending').textContent  = `${s.total_ai_calls - s.kb_hits || 0} AI responses to review`;
+    document.getElementById('refCount').textContent   = `${s.referral_count || 0} referrals`;
+
+    const used = s.reply_count || 0, limit = s.reply_limit || 100;
+    const pct  = Math.min(100, Math.round(used/limit*100));
+    document.getElementById('usageBar').style.width = pct + '%';
+    document.getElementById('usagePct').textContent  = pct + '%';
+    document.getElementById('usageLow').textContent  = `${used} used`;
+    document.getElementById('usageHigh').textContent = `${limit} limit`;
+
+    // Onboarding progress
+    const od = await api('/onboarding/status');
+    if (od.success) {
+      const steps = od.steps;
+      const stepsEl = document.getElementById('progressSteps');
+      stepsEl.innerHTML = Object.entries(steps).map(([k,v]) => {
+        const labels = { account_created:'Account Created', email_verified:'Email Verified', business_info:'Business Info Added', whatsapp_connected:'WhatsApp Connected', products_added:'Products Added', bot_customized:'Bot Customized' };
+        return `<div class="flex items-center gap-3"><span class="${v ? 'text-green-400' : 'text-gray-600'} text-lg">${v ? '✅' : '⬜'}</span><span class="text-sm ${v ? 'text-gray-200' : 'text-gray-500'}">${labels[k]||k}</span></div>`;
+      }).join('');
+      if (od.percent >= 100) document.getElementById('onboardingProgress').classList.add('hidden');
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────────────────
+// ONBOARDING WIZARD
+// ─────────────────────────────────────────────────────────
+function wStep(n) {
+  [1,2,3,4].forEach(i => {
+    document.getElementById(`wstep-${i}`).classList.toggle('hidden', i !== n);
+    document.getElementById(`wtab-${i}`).classList.toggle('active', i === n);
+  });
+}
+
+async function saveBusinessInfo() {
+  const payload = {
+    businessName:       document.getElementById('biz-name').value.trim(),
+    businessDesc:       document.getElementById('biz-desc').value.trim(),
+    businessCategory:   document.getElementById('biz-cat').value,
+    contactPhone:       document.getElementById('biz-cphone').value.trim(),
+    contactEmail:       document.getElementById('biz-cemail').value.trim(),
+    city:               document.getElementById('biz-city').value.trim(),
+    state:              document.getElementById('biz-state').value.trim(),
+    country:            document.getElementById('biz-country').value.trim(),
+    deliveryAreas:      document.getElementById('biz-dareas').value.split(',').map(s=>s.trim()).filter(Boolean),
+    deliveryFee:        parseFloat(document.getElementById('biz-dfee').value) || 0,
+    deliveryDays:       document.getElementById('biz-ddays').value.trim(),
+    freeDeliveryAbove:  document.getElementById('biz-dfree').value || null,
+  };
+  if (!payload.businessName) { toast('Business name is required', 'yellow'); return; }
+  const d = await api('/onboarding/business-info', 'POST', payload);
+  if (d.success) { toast('✅ Business info saved!'); wStep(2); BIZ.businessName = payload.businessName; }
+  else toast('Error: ' + d.error, 'red');
+}
+
+async function saveWhatsApp() {
+  const payload = {
+    waPhoneId:     document.getElementById('wa-phoneid').value.trim(),
+    waAccessToken: document.getElementById('wa-token').value.trim(),
+    waBusinessId:  document.getElementById('wa-bizid').value.trim(),
+    paystackPublic: document.getElementById('ps-pub').value.trim(),
+    paystackSecret: document.getElementById('ps-sec').value.trim(),
+  };
+  if (!payload.waPhoneId || !payload.waAccessToken) { toast('WhatsApp Phone ID and Token are required', 'yellow'); return; }
+  const d = await api('/onboarding/whatsapp', 'POST', payload);
+  if (d.success) { toast('✅ WhatsApp connected!'); wStep(3); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+async function saveBotMessages() {
+  const payload = {
+    greetingMsg:          document.getElementById('bot-greeting').value.trim(),
+    fallbackMsg:          document.getElementById('bot-fallback').value.trim(),
+    awayMsg:              document.getElementById('bot-away').value.trim(),
+    aiPersonality:        document.getElementById('bot-personality').value,
+    customInstructions:   document.getElementById('bot-custom').value.trim(),
+    businessHoursStart:   document.getElementById('bot-start').value,
+    businessHoursEnd:     document.getElementById('bot-end').value,
+  };
+  const d = await api('/onboarding/bot-messages', 'POST', payload);
+  if (d.success) { toast('✅ Bot messages saved!'); wStep(4); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+// ─────────────────────────────────────────────────────────
+// PRODUCTS
+// ─────────────────────────────────────────────────────────
+async function loadProducts() {
+  const el = document.getElementById('productsList');
+  el.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div>';
+  try {
+    const d = await api('/api/products');
+    prodsData = d.products || [];
+    if (!prodsData.length) { el.innerHTML = '<div class="text-center py-10 text-gray-500 text-sm">No products yet. Add your first product! 🛍️</div>'; return; }
+    el.innerHTML = prodsData.map(p => `
+      <div class="card">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="font-bold">${esc(p.name)}</span>
+              ${p.sku ? `<span class="badge badge-gray">${esc(p.sku)}</span>` : ''}
+              <span class="badge ${p.type==='digital'?'badge-blue':'badge-green'}">${p.type==='digital'?'⚡ Digital':'📦 Physical'}</span>
+              <span class="badge ${p.is_active?'badge-green':'badge-gray'}">${p.is_active?'Active':'Inactive'}</span>
+              ${p.sale_price ? '<span class="badge badge-yellow">🔥 On Sale</span>' : ''}
+            </div>
+            <div class="text-sm text-gray-400">
+              ${p.sale_price ? `<span class="line-through text-gray-600">${p.currency} ${Number(p.price).toLocaleString()}</span> <span class="text-green-400 font-bold">${p.currency} ${Number(p.sale_price).toLocaleString()}</span>` : `${p.currency} ${Number(p.price).toLocaleString()}`}
+              ${p.description ? ` · ${esc(p.description).substring(0,60)}` : ''}
+            </div>
+            <div class="text-xs text-gray-600 mt-1">${p.stock !== null ? `Stock: ${p.stock}` : 'Unlimited stock'} ${p.category ? `· ${p.category}` : ''}</div>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button onclick="toggleProduct('${p.id}',${!p.is_active})" class="btn-outline text-xs py-1.5">${p.is_active?'Disable':'Enable'}</button>
+            <button onclick="deleteProduct('${p.id}')" class="btn-red text-xs py-1.5">Delete</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Failed to load products.</div>'; }
+}
+
+function openAddProduct() { document.getElementById('addProductModal').classList.remove('hidden'); }
+function toggleDigital(type) { document.getElementById('digitalFields').classList.toggle('hidden', type !== 'digital'); }
+
+async function addProduct() {
+  const name = document.getElementById('p-name').value.trim();
+  const price = document.getElementById('p-price').value;
+  if (!name || !price) { toast('Name and price are required', 'yellow'); return; }
+  const payload = {
+    name, price: parseFloat(price),
+    sku:         document.getElementById('p-sku').value.trim() || null,
+    category:    document.getElementById('p-cat').value.trim() || 'general',
+    salePrice:   document.getElementById('p-saleprice').value || null,
+    currency:    document.getElementById('p-curr').value,
+    type:        document.getElementById('p-type').value,
+    stock:       document.getElementById('p-stock').value || null,
+    description: document.getElementById('p-desc').value.trim() || null,
+    digitalLink: document.getElementById('p-dlink').value.trim() || null,
+    digitalCode: document.getElementById('p-dcode').value.trim() || null,
+    imageUrl:    document.getElementById('p-img').value.trim() || null,
+    keywords:    document.getElementById('p-kw').value.split(',').map(k=>k.trim()).filter(Boolean),
+  };
+  const d = await api('/api/products', 'POST', payload);
+  if (d.success) { document.getElementById('addProductModal').classList.add('hidden'); toast('Product added! 🛍️'); loadProducts(); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+async function toggleProduct(id, active) {
+  const d = await api(`/api/products/${id}`, 'PATCH', { is_active: active });
+  if (d.success) { toast('Product updated ✅'); loadProducts(); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  const d = await api(`/api/products/${id}`, 'DELETE');
+  if (d.success) { toast('Product deleted'); loadProducts(); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+// EXCEL IMPORT
+function openImport() {
+  if (!BIZ.planLimits?.excel_import) {
+    document.getElementById('planImportWarning').classList.remove('hidden');
+  }
+  document.getElementById('importZone').classList.toggle('hidden');
+}
+
+async function downloadTemplate(e) {
+  e.preventDefault();
+  const d = await api('/api/products/import/template');
+  if (d.success) {
+    // Build CSV template
+    const headers = d.columns.map(c => c.header).join(',');
+    const example = d.columns.map(c => c.example || '').join(',');
+    const csv = `${headers}\n${example}\n`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'vendrai-product-template.csv'; a.click();
+    toast('✅ Template downloaded! Fill it in and upload.');
+  }
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text = e.target.result;
+    const lines = text.split('\n').filter(l => l.trim());
+    if (lines.length < 2) { toast('File is empty or has no data rows', 'yellow'); return; }
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[\s"]/g,''));
+    importData = lines.slice(1).filter(l => l.trim()).map(line => {
+      const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+      const obj  = {};
+      headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
+      return obj;
+    }).filter(r => r.name);
+
+    document.getElementById('importPreviewMsg').textContent = `📊 Found ${importData.length} products. Preview below:`;
+    document.getElementById('importPreviewTable').innerHTML = `
+      <table class="text-xs">
+        <thead><tr>${['name','price','currency','type','category','stock'].map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${importData.slice(0,5).map(r=>`<tr>${['name','price','currency','type','category','stock'].map(h=>`<td>${esc(r[h]||'')}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>
+      ${importData.length > 5 ? `<div class="text-xs text-gray-500 mt-2">...and ${importData.length-5} more rows</div>` : ''}`;
+    document.getElementById('importPreview').classList.remove('hidden');
+  };
+  reader.readAsText(file);
+}
+
+async function submitImport() {
+  if (!importData.length) { toast('No data to import', 'yellow'); return; }
+  const btn = document.getElementById('submitImportBtn');
+  btn.textContent = '⏳ Importing...'; btn.disabled = true;
+  const d = await api('/api/products/import', 'POST', { products: importData });
+  btn.textContent = 'Import Products'; btn.disabled = false;
+  if (d.success) {
+    document.getElementById('importZone').classList.add('hidden');
+    toast(`✅ ${d.imported} products imported! ${d.failed > 0 ? d.failed + ' failed.' : ''}`);
+    loadProducts();
+  } else toast('Import failed: ' + d.error, 'red');
+}
+
+// ─────────────────────────────────────────────────────────
+// ORDERS
+// ─────────────────────────────────────────────────────────
+let orderStatus = 'all';
+function filterOrders(status) {
+  orderStatus = status;
+  document.querySelectorAll('#sec-orders .tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  loadOrders();
+}
+
+async function loadOrders() {
+  const el = document.getElementById('ordersTable');
+  el.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div>';
+  try {
+    const url = orderStatus === 'all' ? '/dashboard/orders' : `/dashboard/orders?status=${orderStatus}`;
+    const d   = await api(url);
+    const orders = d.orders || [];
+    if (!orders.length) { el.innerHTML = '<div class="text-center py-10 text-gray-500 text-sm">No orders yet. They appear here when customers order via WhatsApp! 📦</div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Order No</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody>${orders.map(o => `<tr>
+        <td class="font-mono text-xs">${esc(o.order_number)}</td>
+        <td>${esc(o.contacts?.name||'—')}<br/><span class="text-xs text-gray-500">${esc(o.contacts?.phone||'')}</span></td>
+        <td class="text-xs">${(o.items||[]).map(i=>esc(i.name)).join(', ')}</td>
+        <td class="font-bold">${o.currency} ${Number(o.total).toLocaleString()}</td>
+        <td><span class="badge ${{'pending':'badge-yellow','paid':'badge-green','shipped':'badge-blue','delivered':'badge-green','cancelled':'badge-red'}[o.status]||'badge-gray'}">${o.status}</span></td>
+        <td><span class="badge ${o.paystack_status==='success'?'badge-green':'badge-yellow'}">${o.paystack_status||'pending'}</span></td>
+        <td class="text-xs text-gray-500">${new Date(o.created_at).toLocaleDateString()}</td>
+        <td><select onchange="updateOrderStatus('${o.id}',this.value)" class="inp text-xs" style="width:110px">
+          ${['pending','confirmed','paid','processing','shipped','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+      </tr>`).join('')}</tbody></table>
+      <div class="px-5 py-3 text-xs text-gray-500">Showing ${orders.length} orders</div>`;
+  } catch(e) { el.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Failed to load orders.</div>'; }
+}
+
+async function updateOrderStatus(id, status) {
+  const d = await api(`/dashboard/orders/${id}`, 'PATCH', { status });
+  if (d.success) toast(`Order updated to "${status}" ✅`);
+  else toast('Update failed: ' + d.error, 'red');
+}
+
+// ─────────────────────────────────────────────────────────
+// CONTACTS
+// ─────────────────────────────────────────────────────────
+async function loadContacts() {
+  const el = document.getElementById('contactsTable');
+  el.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div>';
+  try {
+    const search = document.getElementById('contactSearch')?.value || '';
+    const url    = search ? `/dashboard/contacts?search=${encodeURIComponent(search)}` : '/dashboard/contacts';
+    const d      = await api(url);
+    const contacts = d.contacts || [];
+    if (!contacts.length) { el.innerHTML = '<div class="text-center py-10 text-gray-500 text-sm">No contacts yet. They appear here when customers message your bot! 👥</div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Language</th><th>Orders</th><th>Spent</th><th>Segment</th><th>Last Seen</th></tr></thead>
+      <tbody>${contacts.map(c=>`<tr>
+        <td>${esc(c.name||'—')}</td>
+        <td class="font-mono text-xs">${c.phone}</td>
+        <td><span class="badge badge-blue">${c.language||'en'}</span></td>
+        <td>${c.total_orders}</td>
+        <td>₦${Number(c.total_spent||0).toLocaleString()}</td>
+        <td><span class="badge badge-gray">${c.segment||'new'}</span></td>
+        <td class="text-xs text-gray-500">${new Date(c.last_seen).toLocaleDateString()}</td>
+      </tr>`).join('')}</tbody></table>
+      <div class="px-5 py-3 text-xs text-gray-500">Showing ${contacts.length} of ${d.total||contacts.length} contacts</div>`;
+  } catch(e) { el.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Failed to load contacts.</div>'; }
+}
+
+// ─────────────────────────────────────────────────────────
+// KNOWLEDGE BASE
+// ─────────────────────────────────────────────────────────
+async function loadKB() {
+  const el = document.getElementById('kbEntries');
+  el.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div>';
+  try {
+    const d = await api('/dashboard/kb');
+    kbData = d.entries || [];
+    renderKB(kbData);
+    if (d.limit) document.querySelector('#sec-kb p')?.insertAdjacentHTML('beforeend', ` <span class="badge badge-gray ml-2">${kbData.length}/${d.limit} entries</span>`);
+  } catch(e) { el.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Failed to load KB.</div>'; }
+}
+
+function renderKB(entries) {
+  const el = document.getElementById('kbEntries');
+  if (!entries.length) { el.innerHTML = '<div class="text-center py-10 text-gray-500 text-sm">No KB entries yet. Add your first one! ↑</div>'; return; }
+  el.innerHTML = entries.map(e => `
+    <div class="card ${e.is_active?'':'opacity-50'}">
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span class="font-bold text-sm">${esc(e.keyword).substring(0,60)}</span>
+            <span class="badge ${e.is_active?'badge-green':'badge-gray'}">${e.is_active?'Active':'Off'}</span>
+            <span class="badge badge-blue">${e.category||'general'}</span>
+            <span class="badge badge-gray">${e.language||'en'}</span>
+            ${e.promoted_from_ai?'<span class="badge badge-yellow">AI Promoted</span>':''}
+          </div>
+          <p class="text-gray-400 text-sm">${esc(e.answer).substring(0,120)}${e.answer.length>120?'...':''}</p>
+          <div class="text-xs text-gray-600 mt-1">Used ${e.uses} times</div>
+        </div>
+        <div class="flex gap-2 shrink-0">
+          <button onclick="toggleKB('${e.id}')" class="btn-outline text-xs py-1.5">${e.is_active?'Disable':'Enable'}</button>
+          <button onclick="deleteKB('${e.id}')" class="btn-red text-xs py-1.5">Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterKB() {
+  const q = document.getElementById('kbSearch').value.toLowerCase();
+  renderKB(kbData.filter(e => e.keyword.toLowerCase().includes(q) || e.answer.toLowerCase().includes(q)));
+}
+
+async function addKB() {
+  const keyword = document.getElementById('kb-kw').value.trim();
+  const answer  = document.getElementById('kb-ans').value.trim();
+  if (!keyword || !answer) { toast('Keyword and answer are required', 'yellow'); return; }
+  const d = await api('/dashboard/kb', 'POST', { keyword, answer, category: document.getElementById('kb-cat').value, language: document.getElementById('kb-lang').value });
+  if (d.success) { document.getElementById('addKbModal').classList.add('hidden'); toast('KB entry added! ✅'); document.getElementById('kb-kw').value=''; document.getElementById('kb-ans').value=''; loadKB(); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+async function toggleKB(id) {
+  const d = await api(`/dashboard/kb/${id}/toggle`, 'PATCH');
+  if (d.success) { toast('Updated ✅'); loadKB(); }
+}
+
+async function deleteKB(id) {
+  if (!confirm('Delete this KB entry?')) return;
+  await api(`/dashboard/kb/${id}`, 'DELETE');
+  toast('Deleted'); loadKB();
+}
+
+// ─────────────────────────────────────────────────────────
+// AI LOGS
+// ─────────────────────────────────────────────────────────
+async function loadAILogs() {
+  const el = document.getElementById('aiLogEntries');
+  el.innerHTML = '<div class="text-center py-8 text-gray-500"><div class="spinner mx-auto mb-3"></div></div>';
+  try {
+    const d = await api('/dashboard/ai-logs');
+    const candidates = d.candidates || [];
+    document.getElementById('kbPending').textContent = `${candidates.length} AI responses to review`;
+    if (!candidates.length) { el.innerHTML = '<div class="text-center py-10 text-gray-500 text-sm">No AI candidates yet. They appear as customers message your bot! 🤖</div>'; return; }
+    el.innerHTML = candidates.map(c => `
+      <div class="card">
+        <div class="flex items-start justify-between gap-4 flex-col md:flex-row">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <span class="badge badge-yellow">Pending</span>
+              <span class="badge badge-blue">Asked ${c.frequency||1}x</span>
+              <span class="text-xs text-gray-500">${new Date(c.created_at).toLocaleDateString()}</span>
+            </div>
+            <div class="text-sm font-bold mb-1">Customer asked: <span class="text-green-400">"${esc(c.incoming_msg)}"</span></div>
+            <p class="text-gray-400 text-sm mt-1">${esc(c.ai_response||'').substring(0,180)}...</p>
+          </div>
+          <div class="shrink-0 flex gap-2">
+            <button onclick="openPromote('${c.id}','${(c.incoming_msg||'').replace(/'/g,"\\'")}','${(c.ai_response||'').replace(/'/g,"\\'")}' )" class="btn-green text-xs py-2 px-4">✅ Promote to KB</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div class="text-center py-8 text-red-400 text-sm">Failed to load AI logs.</div>'; }
+}
+
+function openPromote(id, kw, ans) {
+  document.getElementById('promoteLogId').value = id;
+  document.getElementById('promoteKw').value    = kw;
+  document.getElementById('promoteAns').value   = ans;
+  document.getElementById('promoteModal').classList.remove('hidden');
+}
+
+async function confirmPromote() {
+  const d = await api(`/dashboard/ai-logs/${document.getElementById('promoteLogId').value}/promote`, 'POST', {
+    customAnswer: document.getElementById('promoteAns').value,
+    category:     document.getElementById('promoteCat').value,
+    language:     document.getElementById('promoteLang').value,
+  });
+  if (d.success) { document.getElementById('promoteModal').classList.add('hidden'); toast('🎉 Promoted to KB!'); loadAILogs(); }
+  else toast('Error: ' + d.error, 'red');
+}
+
+async function autoPromote() {
+  if (!confirm('Auto-promote all high-confidence AI responses? Safe — you can edit/delete them later.')) return;
+  toast('⏳ Promoting...', 'blue');
+  // Uses the existing admin auto-promote endpoint
+  const d = await fetch(`${API}/admin/auto-promote/${BIZ.id}`, { method:'POST', headers: { 'Content-Type':'application/json', 'x-session-token': TOKEN }, body: JSON.stringify({ minConfidence:0.85, minFrequency:2 }) });
+  const r = await d.json();
+  if (r.success) { toast(`⚡ Auto-promoted ${r.promoted} entries!`); loadAILogs(); }
+}
+
+// ─────────────────────────────────────────────────────────
+// BROADCAST
+// ─────────────────────────────────────────────────────────
+async function sendBroadcast() {
+  const msg = document.getElementById('broad-msg').value.trim();
+  if (!msg) { toast('Message is required', 'yellow'); return; }
+  const tags = document.getElementById('broad-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const d    = await api('/dashboard/broadcasts/send', 'POST', { title: document.getElementById('broad-title').value.trim(), message: msg, targetTags: tags });
+  const el   = document.getElementById('broadResult');
+  el.classList.remove('hidden');
+  if (d.success) { el.textContent = `✅ Sent to ${d.sent} contacts! ${d.failed} failed.`; toast(`Broadcast sent to ${d.sent} contacts! 🎉`); }
+  else { el.textContent = '⚠️ Error: ' + d.error; toast('Broadcast failed', 'red'); }
+}
+
+// ─────────────────────────────────────────────────────────
+// REFERRALS
+// ─────────────────────────────────────────────────────────
+async function loadReferrals() {
+  try {
+    const d = await api('/dashboard/referrals');
+    if (d.success) {
+      document.getElementById('refCode').textContent = d.referralCode || '—';
+      document.getElementById('refLink').value       = d.referralLink || '';
+      document.getElementById('totalRefs').textContent = d.totalReferrals || 0;
+      document.getElementById('convRefs').textContent  = (d.referrals||[]).filter(r=>r.status==='converted').length;
+    }
+  } catch(e) {}
+}
+
+function copyRef() { navigator.clipboard.writeText(document.getElementById('refLink').value).then(()=>toast('Referral link copied! Share it now 🚀')); }
+function copyWebhook() { navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(()=>toast('Webhook URL copied! ✅')); }
+
+// ─────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────
+async function saveSetting(key, value) {
+  const d = await api('/dashboard/settings', 'PATCH', { [key]: value });
+  if (d.success) toast(`Setting saved ✅`);
+  else toast('Error: ' + d.error, 'red');
+}
+
+// ─────────────────────────────────────────────────────────
+// PROFILE
+// ─────────────────────────────────────────────────────────
+async function changePassword() {
+  const cur = document.getElementById('pw-current').value;
+  const nw  = document.getElementById('pw-new').value;
+  const cnf = document.getElementById('pw-confirm').value;
+  if (!cur || !nw) { toast('All password fields are required', 'yellow'); return; }
+  if (nw !== cnf)  { toast('New passwords do not match', 'yellow'); return; }
+  if (nw.length < 8) { toast('Password must be at least 8 characters', 'yellow'); return; }
+  const d = await api('/dashboard/change-password', 'PATCH', { currentPassword: cur, newPassword: nw });
+  if (d.success) { toast('✅ Password changed!'); document.getElementById('pw-current').value=''; document.getElementById('pw-new').value=''; document.getElementById('pw-confirm').value=''; }
+  else toast('Error: ' + d.error, 'red');
+}
+
+// ─────────────────────────────────────────────────────────
+// LOGOUT
+// ─────────────────────────────────────────────────────────
+async function logout() {
+  try { await api('/auth/logout', 'POST'); } catch(e) {}
+  localStorage.removeItem('vendrai_token');
+  localStorage.removeItem('vendrai_biz_id');
+  window.location.href = 'login.html';
+}
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b462f47e4962c0',t:'MTc4MTM4ODIxOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

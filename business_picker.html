@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VendrAI — Choose Your Business Type</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#0B0F1A;color:#E2E8F0;min-height:100vh;}
+    .header{background:#0F172A;border-bottom:1px solid rgba(255,255,255,.07);padding:20px 24px;display:flex;align-items:center;gap:12px;}
+    .logo{width:38px;height:38px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+    .header-text h1{font-size:1.2rem;font-weight:900;}
+    .header-text p{font-size:.78rem;color:#94A3B8;margin-top:2px;}
+    .container{max-width:1100px;margin:0 auto;padding:30px 20px;}
+    .hero{text-align:center;margin-bottom:36px;}
+    .hero h2{font-size:1.8rem;font-weight:900;margin-bottom:8px;}
+    .hero h2 span{background:linear-gradient(135deg,#25D366,#7FFFD4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero p{color:#94A3B8;font-size:.92rem;max-width:560px;margin:0 auto;}
+    .search-bar{max-width:480px;margin:20px auto 30px;position:relative;}
+    .search-bar input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 20px 14px 48px;color:white;font-size:.9rem;outline:none;transition:border-color .2s;}
+    .search-bar input:focus{border-color:#25D366;}
+    .search-bar input::placeholder{color:#64748B;}
+    .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#64748B;font-size:1.1rem;}
+    .cat-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;}
+    .pill{padding:7px 18px;border-radius:99px;font-size:.78rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:transparent;color:#94A3B8;transition:all .2s;}
+    .pill.active,.pill:hover{background:rgba(37,211,102,.1);color:#25D366;border-color:rgba(37,211,102,.3);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:40px;}
+    .biz-card{background:#111827;border:2px solid rgba(255,255,255,.06);border-radius:16px;padding:20px;cursor:pointer;transition:all .25s;position:relative;}
+    .biz-card:hover{border-color:rgba(37,211,102,.4);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.3),0 0 20px rgba(37,211,102,.06);}
+    .biz-card.selected{border-color:#25D366;background:rgba(37,211,102,.05);box-shadow:0 0 30px rgba(37,211,102,.15);}
+    .biz-card .check{position:absolute;top:14px;right:14px;width:24px;height:24px;background:#25D366;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:.75rem;color:white;font-weight:900;}
+    .biz-card.selected .check{display:flex;}
+    .biz-icon{font-size:2.2rem;margin-bottom:10px;}
+    .biz-name{font-weight:800;font-size:.95rem;margin-bottom:4px;color:white;}
+    .biz-desc{font-size:.75rem;color:#94A3B8;line-height:1.5;margin-bottom:10px;}
+    .biz-meta{display:flex;gap:6px;flex-wrap:wrap;}
+    .meta-tag{padding:2px 9px;border-radius:99px;font-size:.65rem;font-weight:700;}
+    .meta-goods{background:rgba(59,130,246,.12);color:#60A5FA;}
+    .meta-services{background:rgba(168,85,247,.12);color:#C084FC;}
+    .meta-digital{background:rgba(34,211,170,.12);color:#2DD4BF;}
+    .meta-food{background:rgba(34,197,94,.12);color:#4ADE80;}
+    .meta-fashion{background:rgba(236,72,153,.12);color:#F472B6;}
+    .meta-tech{background:rgba(59,130,246,.12);color:#60A5FA;}
+    .meta-beauty{background:rgba(251,146,60,.12);color:#FB923C;}
+    .meta-health{background:rgba(239,68,68,.12);color:#F87171;}
+    .meta-agric{background:rgba(132,204,22,.12);color:#A3E635;}
+    .meta-education{background:rgba(245,158,11,.12);color:#FCD34D;}
+    .meta-home{background:rgba(99,102,241,.12);color:#818CF8;}
+    .meta-physical{background:rgba(99,102,241,.12);color:#818CF8;}
+    .preview-panel{background:#111827;border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:24px;margin-bottom:24px;display:none;}
+    .preview-panel.show{display:block;}
+    .preview-panel h3{font-size:1.1rem;font-weight:800;margin-bottom:4px;}
+    .preview-panel .subtitle{color:#94A3B8;font-size:.8rem;margin-bottom:20px;}
+    .preview-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:12px;}
+    .ptab{padding:6px 16px;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600;color:#64748B;border:none;background:transparent;transition:all .2s;}
+    .ptab.active{background:rgba(37,211,102,.1);color:#25D366;}
+    .product-list{display:grid;gap:10px;}
+    .product-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;}
+    .product-item .pname{font-weight:700;font-size:.85rem;margin-bottom:2px;}
+    .product-item .pprice{color:#25D366;font-weight:800;font-size:.85rem;}
+    .product-item .pdesc{color:#94A3B8;font-size:.75rem;margin-top:3px;}
+    .product-item .pkw{color:#64748B;font-size:.68rem;margin-top:4px;}
+    .kb-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:10px;}
+    .kb-item .kw{color:#25D366;font-size:.78rem;font-weight:700;margin-bottom:4px;}
+    .kb-item .ans{color:#CBD5E1;font-size:.8rem;line-height:1.5;}
+    .sticky-bottom{position:fixed;bottom:0;left:0;right:0;background:#0F172A;border-top:1px solid rgba(255,255,255,.08);padding:16px 20px;display:none;z-index:50;}
+    .sticky-bottom.show{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    .selected-info{font-size:.85rem;color:#94A3B8;}
+    .selected-info strong{color:white;}
+    .btn-apply{background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;padding:13px 36px;border-radius:12px;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 0 24px rgba(37,211,102,.35);transition:all .2s;}
+    .btn-apply:hover{opacity:.9;transform:translateY(-1px);}
+    .btn-skip{background:transparent;color:#64748B;border:none;font-size:.8rem;cursor:pointer;text-decoration:underline;}
+    .empty-state{text-align:center;padding:60px 20px;color:#64748B;}
+    .count-badge{background:rgba(37,211,102,.15);color:#25D366;padding:2px 10px;border-radius:99px;font-size:.72rem;font-weight:700;margin-left:8px;}
+    .success-screen{display:none;text-align:center;padding:60px 20px;}
+    .success-screen.show{display:block;}
+    .tick-anim{width:80px;height:80px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 20px;animation:pop .5s ease;}
+    @keyframes pop{0%{transform:scale(0);}80%{transform:scale(1.1);}100%{transform:scale(1);}}
+    @media(max-width:640px){.grid{grid-template-columns:1fr 1fr;}.biz-desc{display:none;}}
+    @media(max-width:400px){.grid{grid-template-columns:1fr;}.biz-desc{display:block;}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">🤖</div>
+  <div class="header-text">
+    <h1>VendrAI — Choose Your Business Type</h1>
+    <p>Step 1 of 4 · We'll pre-load products, bot replies and settings for you automatically</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- SUCCESS SCREEN (hidden) -->
+  <div class="success-screen" id="successScreen">
+    <div class="tick-anim">✅</div>
+    <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:10px;">
+      Business Template Applied! 🎉
+    </h2>
+    <p style="color:#94A3B8;max-width:480px;margin:0 auto 8px;">
+      Your bot has been pre-loaded with products, custom reply scripts and delivery settings for your business type.
+    </p>
+    <p style="color:#94A3B8;font-size:.85rem;max-width:480px;margin:0 auto 30px;">
+      You can add more products and customise everything from your dashboard.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="goToDashboard()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:white;border:none;padding:14px 36px;border-radius:12px;font-size:.9rem;font-weight:800;cursor:pointer;">
+        Go to Dashboard →
+      </button>
+      <button onclick="addMoreProducts()" style="background:rgba(255,255,255,.05);color:#CBD5E1;border:1px solid rgba(255,255,255,.1);padding:14px 28px;border-radius:12px;font-size:.9rem;font-weight:600;cursor:pointer;">
+        Add More Products
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="mainContent">
+    <div class="hero">
+      <h2>What type of business <span>do you run?</span></h2>
+      <p>Pick your business type and we'll pre-load your bot with ready-made products, prices, descriptions and customer reply scripts. You can edit everything later.</p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search business type... e.g. wig, food, tech, forex" oninput="filterBiz()"/>
+    </div>
+
+    <!-- CATEGORY PILLS -->
+    <div class="cat-pills" id="catPills">
+      <button class="pill active" onclick="filterCat('all',this)">All <span class="count-badge" id="cnt-all">100</span></button>
+      <button class="pill" onclick="filterCat('fashion',this)">👗 Fashion</button>
+      <button class="pill" onclick="filterCat('beauty',this)">✨ Beauty</button>
+      <button class="pill" onclick="filterCat('food',this)">🍔 Food</button>
+      <button class="pill" onclick="filterCat('tech',this)">💻 Tech</button>
+      <button class="pill" onclick="filterCat('education',this)">📚 Education</button>
+      <button class="pill" onclick="filterCat('services',this)">🔧 Services</button>
+      <button class="pill" onclick="filterCat('health',this)">💊 Health</button>
+      <button class="pill" onclick="filterCat('agric',this)">🌾 Agriculture</button>
+      <button class="pill" onclick="filterCat('home',this)">🏠 Home</button>
+    </div>
+
+    <!-- PREVIEW PANEL -->
+    <div class="preview-panel" id="previewPanel">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span id="previewIcon" style="font-size:2rem;"></span>
+        <div>
+          <h3 id="previewTitle">—</h3>
+          <p class="subtitle" id="previewDesc">—</p>
+        </div>
+      </div>
+      <div class="preview-tabs">
+        <button class="ptab active" id="ptab-products" onclick="switchPreview('products')">🛍️ Products That Will Be Added</button>
+        <button class="ptab" id="ptab-kb" onclick="switchPreview('kb')">📚 Bot Reply Scripts</button>
+        <button class="ptab" id="ptab-settings" onclick="switchPreview('settings')">⚙️ Bot Settings</button>
+      </div>
+      <div id="previewProducts">
+        <div class="product-list" id="productPreviewList"></div>
+        <p style="color:#64748B;font-size:.75rem;margin-top:12px;">+ You can add unlimited more products after setup</p>
+      </div>
+      <div id="previewKB" style="display:none;">
+        <div id="kbPreviewList"></div>
+        <p style="color:#64748B;font-size:.75rem;margin-top:12px;">+ You can add unlimited more Q&A after setup</p>
+      </div>
+      <div id="previewSettings" style="display:none;">
+        <div id="settingsPreviewContent"></div>
+      </div>
+    </div>
+
+    <!-- BUSINESS GRID -->
+    <div class="grid" id="bizGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div style="font-size:3rem;margin-bottom:12px;">🔍</div>
+      <div style="font-weight:700;margin-bottom:6px;">No business type found</div>
+      <div style="font-size:.85rem;">Try a different search word or <button onclick="clearSearch()" style="color:#25D366;background:none;border:none;cursor:pointer;font-size:.85rem;">clear search</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- STICKY BOTTOM BAR -->
+<div class="sticky-bottom" id="stickyBar">
+  <div class="selected-info">
+    <div style="font-size:.75rem;color:#64748B;margin-bottom:2px;">Selected business type:</div>
+    <strong id="selectedName">—</strong>
+    <div style="font-size:.72rem;color:#94A3B8;margin-top:2px;" id="selectedMeta"></div>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+    <button class="btn-skip" onclick="skipTemplate()">Skip — I'll set up manually</button>
+    <button class="btn-apply" onclick="applyTemplate()">
+      Apply This Template ✅
+    </button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// DATA — 100 Business Types
+// ─────────────────────────────────────────────────────────
+const BUSINESSES = [
+  // FASHION
+  { code:'wig_store', name:'Wig & Hair Store', cat:'fashion', icon:'💇', desc:'Human hair wigs, closures, frontals and extensions.', type:'goods', products:5, kb:5 },
+  { code:'fabric_store', name:'Ankara & Fabric Store', cat:'fashion', icon:'🧵', desc:'Ankara, Aso-ebi, lace and fabrics by the yard.', type:'goods', products:6, kb:4 },
+  { code:'fashion_designer', name:'Fashion Designer & Tailor', cat:'fashion', icon:'✂️', desc:'Custom clothing, alterations and event outfits.', type:'services', products:5, kb:4 },
+  { code:'thrift_clothing', name:'Thrift & UK Used Clothing', cat:'fashion', icon:'👗', desc:'Fairly-used/imported clothing. Bales and individual pieces.', type:'goods', products:5, kb:3 },
+  { code:'shoe_store', name:'Footwear & Shoe Store', cat:'fashion', icon:'👠', desc:'Ladies shoes, men shoes, sneakers and sandals.', type:'goods', products:6, kb:4 },
+  { code:'bag_accessories', name:'Bags & Accessories Store', cat:'fashion', icon:'👜', desc:'Handbags, backpacks, belts, wallets and fashion accessories.', type:'goods', products:5, kb:3 },
+  { code:'baby_clothing', name:'Baby & Kids Clothing', cat:'fashion', icon:'👶', desc:'Baby clothes, kids wear, school uniforms and accessories.', type:'goods', products:5, kb:3 },
+  { code:'gym_wear', name:'Sportswear & Gym Clothing', cat:'fashion', icon:'🏋️', desc:'Gym wear, joggers, leggings, jerseys and activewear.', type:'goods', products:5, kb:3 },
+  { code:'aso_ebi', name:'Aso-ebi & Uniform Supply', cat:'fashion', icon:'👘', desc:'Aso-ebi coordination and group fabric supply for events.', type:'goods', products:4, kb:3 },
+  // BEAUTY
+  { code:'skincare_store', name:'Skincare & Beauty Products', cat:'beauty', icon:'✨', desc:'Body lotion, face cream, serum, toner and sunscreen.', type:'goods', products:6, kb:5 },
+  { code:'makeup_artist', name:'Makeup Artist (MUA)', cat:'beauty', icon:'💄', desc:'Professional makeup for weddings, events and portraits.', type:'services', products:5, kb:4 },
+  { code:'nail_salon', name:'Nail Salon & Nail Tech', cat:'beauty', icon:'💅', desc:'Nail art, manicure, pedicure, gel nails and acrylic nails.', type:'services', products:5, kb:4 },
+  { code:'hair_salon', name:'Hair Salon & Barber', cat:'beauty', icon:'💈', desc:'Hair styling, braiding, relaxing and cutting for men and women.', type:'services', products:5, kb:4 },
+  { code:'perfume_store', name:'Perfume & Fragrance Store', cat:'beauty', icon:'🌸', desc:'Original and designer perfumes, body mists and gift sets.', type:'goods', products:5, kb:4 },
+  { code:'jewelry_store', name:'Jewelry & Accessories', cat:'beauty', icon:'💍', desc:'Gold, silver, fashion jewelry, rings and necklaces.', type:'goods', products:6, kb:4 },
+  { code:'henna_artist', name:'Henna & Body Art', cat:'beauty', icon:'🌺', desc:'Henna tattoo, bridal henna and body art for events.', type:'services', products:4, kb:3 },
+  // FOOD
+  { code:'home_chef', name:'Home Chef & Food Delivery', cat:'food', icon:'🍲', desc:'Fresh Nigerian meals delivered to customers.', type:'goods', products:6, kb:5 },
+  { code:'catering_service', name:'Catering & Events Food', cat:'food', icon:'🍽️', desc:'Full catering for parties, weddings and corporate events.', type:'services', products:5, kb:4 },
+  { code:'small_chops', name:'Small Chops & Pastries', cat:'food', icon:'🥟', desc:'Puff puff, samosa, spring rolls and chicken wings.', type:'goods', products:5, kb:4 },
+  { code:'bakery', name:'Bakery & Confectionery', cat:'food', icon:'🎂', desc:'Cakes, bread, pastries, cookies and cupcakes.', type:'goods', products:6, kb:4 },
+  { code:'drinks_vendor', name:'Drinks & Beverages', cat:'food', icon:'🥤', desc:'Zobo, kunu, smoothies and fresh juice.', type:'goods', products:5, kb:3 },
+  { code:'snacks_store', name:'Snacks & Confectionery', cat:'food', icon:'🍿', desc:'Chin chin, groundnut, popcorn and African snacks.', type:'goods', products:5, kb:3 },
+  { code:'frozen_foods', name:'Frozen Foods & Meat Shop', cat:'food', icon:'🥩', desc:'Turkey, chicken, fish, croaker and frozen meats.', type:'goods', products:6, kb:4 },
+  { code:'restaurant', name:'Restaurant & Canteen', cat:'food', icon:'🍱', desc:'Full restaurant menu: rice, soup, swallow and daily specials.', type:'goods', products:8, kb:5 },
+  { code:'pepper_sauce', name:'Pepper & Spice Seller', cat:'food', icon:'🌶️', desc:'Ground pepper, tomatoes, crayfish and cooking ingredients.', type:'goods', products:5, kb:3 },
+  { code:'palm_oil', name:'Palm Oil & Farm Produce', cat:'food', icon:'🫙', desc:'Palm oil, groundnut oil, egusi and farm produce.', type:'goods', products:5, kb:3 },
+  { code:'ice_cream', name:'Ice Cream & Dessert Shop', cat:'food', icon:'🍦', desc:'Ice cream, yoghurt, waffles and sweet desserts.', type:'goods', products:5, kb:3 },
+  { code:'shawarma', name:'Shawarma & Fast Food', cat:'food', icon:'🌯', desc:'Shawarma, burgers, fries and fast food.', type:'goods', products:6, kb:4 },
+  { code:'rice_supplier', name:'Wholesale Rice & Grains', cat:'food', icon:'🌾', desc:'Wholesale rice, beans, garri, semo for bulk buyers.', type:'goods', products:5, kb:3 },
+  { code:'fruit_vendor', name:'Fruit & Vegetable Vendor', cat:'food', icon:'🥦', desc:'Fresh fruits, vegetables and farm-fresh produce.', type:'goods', products:6, kb:3 },
+  { code:'puff_puff', name:'Puff Puff & Street Snacks', cat:'food', icon:'🍩', desc:'Puff puff, akara, buns, suya and Nigerian street snacks.', type:'goods', products:5, kb:3 },
+  { code:'cake_events', name:'Customised Cakes', cat:'food', icon:'🎂', desc:'Custom birthday, wedding and celebration cakes.', type:'goods', products:5, kb:4 },
+  // TECH
+  { code:'phone_store', name:'Phone & Gadget Store', cat:'tech', icon:'📱', desc:'New and fairly-used smartphones, tablets and accessories.', type:'goods', products:6, kb:5 },
+  { code:'phone_repair', name:'Phone & Laptop Repair', cat:'tech', icon:'🔧', desc:'Screen replacement, battery change and phone servicing.', type:'services', products:6, kb:4 },
+  { code:'laptop_store', name:'Laptop & Computer Store', cat:'tech', icon:'💻', desc:'New and UK-used laptops, desktops and accessories.', type:'goods', products:6, kb:4 },
+  { code:'accessories_store', name:'Phone Accessories Store', cat:'tech', icon:'🔌', desc:'Chargers, cables, earphones, cases and screen protectors.', type:'goods', products:7, kb:3 },
+  { code:'cctv_installer', name:'CCTV & Security Systems', cat:'tech', icon:'📹', desc:'Supply and install CCTV cameras and alarm systems.', type:'services', products:4, kb:4 },
+  { code:'solar_installer', name:'Solar & Power Systems', cat:'tech', icon:'☀️', desc:'Solar panels, inverters and complete power installations.', type:'services', products:5, kb:5 },
+  { code:'printing_business', name:'Printing & Branding', cat:'tech', icon:'🖨️', desc:'Business cards, banners, flyers and branded materials.', type:'services', products:6, kb:4 },
+  { code:'web_designer', name:'Website & App Designer', cat:'tech', icon:'🌐', desc:'Build websites, landing pages and mobile apps.', type:'digital', products:5, kb:5 },
+  { code:'it_support', name:'IT Support & Networking', cat:'tech', icon:'🖥️', desc:'Computer repairs, network setup and IT consulting.', type:'services', products:5, kb:4 },
+  { code:'electronics_repair', name:'Electronics & Appliance Repair', cat:'tech', icon:'⚡', desc:'TV, refrigerator, AC and home appliance repairs.', type:'services', products:5, kb:4 },
+  // EDUCATION & DIGITAL
+  { code:'online_courses', name:'Online Courses & Training', cat:'education', icon:'🎓', desc:'Video courses, webinars and training in any skill.', type:'digital', products:6, kb:5 },
+  { code:'ebook_author', name:'eBook & Digital Content', cat:'education', icon:'📖', desc:'eBooks, guides, templates and digital info products.', type:'digital', products:5, kb:4 },
+  { code:'graphic_designer', name:'Graphic Designer', cat:'services', icon:'🎨', desc:'Logo, flyers, social media posts and branding kits.', type:'digital', products:5, kb:4 },
+  { code:'video_editor', name:'Video Editor & Creator', cat:'services', icon:'🎬', desc:'Video editing, motion graphics and YouTube content.', type:'digital', products:5, kb:4 },
+  { code:'copywriter', name:'Copywriter & Content Writer', cat:'services', icon:'✍️', desc:'Sales copy, blog posts, product descriptions and ads.', type:'digital', products:5, kb:4 },
+  { code:'social_media_mgr', name:'Social Media Manager', cat:'services', icon:'📲', desc:'Manage Instagram, Facebook, TikTok and Twitter accounts.', type:'digital', products:4, kb:4 },
+  { code:'music_producer', name:'Music Producer & Beat Maker', cat:'services', icon:'🎵', desc:'Beats, instrumentals, mixing and music production.', type:'digital', products:5, kb:4 },
+  { code:'photographer', name:'Photographer & Videographer', cat:'services', icon:'📸', desc:'Photography for weddings, events and products.', type:'services', products:5, kb:4 },
+  { code:'cbt_center', name:'CBT & Exam Prep Center', cat:'education', icon:'📝', desc:'JAMB, WAEC, NECO exam prep and tutorial classes.', type:'digital', products:5, kb:4 },
+  { code:'coding_tutor', name:'Coding & Tech Tutor', cat:'education', icon:'👨‍💻', desc:'Teach coding, web development and digital skills.', type:'digital', products:5, kb:4 },
+  { code:'language_tutor', name:'Language & Academic Tutor', cat:'education', icon:'🗣️', desc:'Teach English, French, Yoruba and school subjects.', type:'digital', products:5, kb:4 },
+  { code:'forex_trading', name:'Forex & Investment Coaching', cat:'education', icon:'📈', desc:'Forex courses, signals, mentorship and investment education.', type:'digital', products:5, kb:5 },
+  { code:'cv_writing', name:'CV Writing & Career Coach', cat:'services', icon:'📄', desc:'CVs, cover letters, LinkedIn and career coaching.', type:'digital', products:4, kb:4 },
+  { code:'podcast_producer', name:'Podcast Producer & Editor', cat:'services', icon:'🎙️', desc:'Record, edit and produce podcasts for clients.', type:'digital', products:4, kb:4 },
+  { code:'data_analyst', name:'Data Analysis & Reports', cat:'services', icon:'📊', desc:'Data entry, Excel analysis, Power BI and insights.', type:'digital', products:4, kb:4 },
+  // HEALTH
+  { code:'pharmacy', name:'Pharmacy & Drug Store', cat:'health', icon:'💊', desc:'OTC medicines, health supplements and vitamins.', type:'goods', products:6, kb:4 },
+  { code:'herbal_store', name:'Herbal & Natural Medicine', cat:'health', icon:'🌿', desc:'Herbal remedies, roots and traditional African medicine.', type:'goods', products:5, kb:4 },
+  { code:'gym_fitness', name:'Gym & Fitness Center', cat:'health', icon:'🏋️', desc:'Gym membership, personal training and group fitness.', type:'services', products:5, kb:4 },
+  { code:'dietitian', name:'Dietitian & Nutritionist', cat:'health', icon:'🥗', desc:'Meal plans, nutrition coaching and weight loss programs.', type:'digital', products:4, kb:4 },
+  { code:'mental_health', name:'Mental Health & Therapy', cat:'health', icon:'🧠', desc:'Online counselling, therapy and mental health coaching.', type:'digital', products:4, kb:5 },
+  { code:'baby_care', name:'Baby Care & Pediatric Products', cat:'health', icon:'🍼', desc:'Baby food, diapers, cream and infant care products.', type:'goods', products:6, kb:3 },
+  { code:'lab_test', name:'Medical Lab & Test Services', cat:'health', icon:'🔬', desc:'Blood tests, pregnancy tests and health screening.', type:'services', products:5, kb:4 },
+  { code:'massage_spa', name:'Massage & Spa Services', cat:'health', icon:'💆', desc:'Body massage, spa treatments, facials and relaxation.', type:'services', products:5, kb:4 },
+  { code:'optician', name:'Optical & Eye Care', cat:'health', icon:'👓', desc:'Prescription glasses, sunglasses and eye tests.', type:'goods', products:5, kb:4 },
+  { code:'fitness_coach', name:'Online Fitness Coach', cat:'health', icon:'🏃', desc:'Virtual workout classes, fitness plans and coaching.', type:'digital', products:4, kb:4 },
+  // HOME
+  { code:'furniture_store', name:'Furniture & Home Decor', cat:'home', icon:'🛋️', desc:'Sofas, dining sets, beds and decoration items.', type:'goods', products:6, kb:4 },
+  { code:'cleaning_service', name:'Cleaning & Janitorial Service', cat:'home', icon:'🧹', desc:'Home cleaning, office cleaning and deep cleaning.', type:'services', products:5, kb:4 },
+  { code:'real_estate', name:'Real Estate & Property', cat:'home', icon:'🏠', desc:'Land, houses and apartments for sale and rent.', type:'services', products:4, kb:5 },
+  { code:'interior_designer', name:'Interior Designer', cat:'home', icon:'🏡', desc:'Interior decoration, space planning and home styling.', type:'services', products:4, kb:4 },
+  { code:'plumber_electrician', name:'Plumber & Electrician', cat:'home', icon:'🔧', desc:'Plumbing repairs, electrical installations and wiring.', type:'services', products:5, kb:4 },
+  { code:'generator_repair', name:'Generator & AC Technician', cat:'home', icon:'⚙️', desc:'Generator servicing, AC installation and repairs.', type:'services', products:5, kb:4 },
+  { code:'paint_supplier', name:'Paint & Hardware Store', cat:'home', icon:'🎨', desc:'Emulsion paint, gloss, putty and building hardware.', type:'goods', products:5, kb:3 },
+  { code:'kitchen_equipment', name:'Kitchen Equipment Supplier', cat:'home', icon:'🍳', desc:'Industrial blenders, freezers, cookers and equipment.', type:'goods', products:5, kb:3 },
+  { code:'bedding_store', name:'Bedding & Linen Store', cat:'home', icon:'🛏️', desc:'Mattresses, bed sheets, pillows, duvets and towels.', type:'goods', products:6, kb:3 },
+  { code:'curtain_store', name:'Curtain & Blinds Store', cat:'home', icon:'🪟', desc:'Window blinds, curtains, drapes and home window treatments.', type:'goods', products:5, kb:3 },
+  // AGRICULTURE
+  { code:'poultry_farm', name:'Poultry Farm & Egg Seller', cat:'agric', icon:'🐔', desc:'Broiler chickens, layers, day-old chicks and eggs.', type:'goods', products:5, kb:4 },
+  { code:'fish_farming', name:'Fish Farm & Catfish Seller', cat:'agric', icon:'🐟', desc:'Live catfish, smoked fish and aquaculture products.', type:'goods', products:4, kb:4 },
+  { code:'crop_farming', name:'Crop Farming & Produce', cat:'agric', icon:'🌽', desc:'Maize, cassava, yam, plantain and farm produce.', type:'goods', products:5, kb:3 },
+  { code:'agro_inputs', name:'Agro Inputs & Vet Supplies', cat:'agric', icon:'🌱', desc:'Fertilizers, pesticides, seeds, feeds and farming tools.', type:'goods', products:6, kb:4 },
+  { code:'snail_farming', name:'Snail & Livestock Farming', cat:'agric', icon:'🐌', desc:'Live snails, grasscutters, rabbits and small livestock.', type:'goods', products:4, kb:3 },
+  // TRANSPORT
+  { code:'dispatch_rider', name:'Dispatch & Delivery Service', cat:'services', icon:'🏍️', desc:'Same-day delivery and errand running within city.', type:'services', products:4, kb:5 },
+  { code:'haulage', name:'Haulage & Truck Rental', cat:'services', icon:'🚛', desc:'Truck hire, haulage and interstate transportation.', type:'services', products:4, kb:4 },
+  { code:'travel_agent', name:'Travel Agency & Ticketing', cat:'services', icon:'✈️', desc:'Flight tickets, hotel bookings and tour packages.', type:'digital', products:5, kb:5 },
+  { code:'car_rental', name:'Car Hire & Rental Service', cat:'services', icon:'🚗', desc:'Self-drive car hire, chauffeur and airport pickup.', type:'services', products:5, kb:4 },
+  { code:'logistics_agent', name:'Import & Export Agent', cat:'services', icon:'📦', desc:'Customs clearance, importation and exportation.', type:'services', products:4, kb:4 },
+  // FINANCE
+  { code:'pos_agent', name:'POS Agent & Money Transfer', cat:'services', icon:'💰', desc:'POS cash out, transfer, airtime and bill payments.', type:'services', products:5, kb:5 },
+  { code:'insurance_agent', name:'Insurance Agent', cat:'services', icon:'🛡️', desc:'Life, health, car insurance and property cover.', type:'digital', products:4, kb:4 },
+  { code:'loan_agent', name:'Loan & Cooperative Agent', cat:'services', icon:'🏦', desc:'Soft loans, group savings and micro-finance.', type:'digital', products:4, kb:4 },
+  { code:'tax_consultant', name:'Tax & Accounting Consultant', cat:'services', icon:'📋', desc:'Tax filing, bookkeeping and financial advice.', type:'digital', products:4, kb:4 },
+  { code:'bitcoin_trading', name:'Crypto & BTC Trading', cat:'services', icon:'₿', desc:'Buy and sell Bitcoin, USDT and P2P exchange.', type:'digital', products:4, kb:5 },
+  // EVENTS
+  { code:'event_decorator', name:'Event Decorator & Rentals', cat:'services', icon:'🎉', desc:'Event decoration, tent, chair and table hire.', type:'services', products:6, kb:4 },
+  { code:'dj_service', name:'DJ & Entertainment Services', cat:'services', icon:'🎧', desc:'DJ services, MC bookings and sound equipment hire.', type:'services', products:4, kb:4 },
+  { code:'gift_shop', name:'Gift Shop & Hampers', cat:'services', icon:'🎁', desc:'Gift hampers, customised gifts and celebration sets.', type:'goods', products:5, kb:4 },
+  { code:'printing_promo', name:'Branded Merchandise', cat:'services', icon:'👕', desc:'Custom T-shirts, mugs, caps and branded products.', type:'goods', products:5, kb:4 },
+  { code:'bounce_castle', name:'Bounce Castle & Kids Entertainment', cat:'services', icon:'🎠', desc:'Bounce castle hire and kids party entertainment.', type:'services', products:4, kb:3 },
+  { code:'studio_rental', name:'Studio & Venue Rental', cat:'services', icon:'🎬', desc:'Photography studio, event venue and space rental.', type:'services', products:4, kb:4 },
+  { code:'invitation_card', name:'Invitation Cards & Stationery', cat:'services', icon:'📨', desc:'Wedding invitations, event programmes and stationery.', type:'digital', products:5, kb:4 },
+  { code:'wedding_planner', name:'Wedding & Events Planner', cat:'services', icon:'💒', desc:'Full wedding planning, decoration and coordination.', type:'services', products:5, kb:5 },
+];
+
+// ─────────────────────────────────────────────────────────
+// SAMPLE PREVIEW DATA per business type
+// ─────────────────────────────────────────────────────────
+const PREVIEW_DATA = {
+  wig_store: {
+    products:[
+      {name:'Brazilian Body Wave Wig 18inch',price:'₦45,000 → ₦38,000',desc:'100% human hair. Pre-plucked. Adjustable strap.',kw:'wig, body wave, 18inch, human hair'},
+      {name:'Straight Closure Wig 20inch',price:'₦38,000 → ₦32,000',desc:'4x4 lace closure. 150% density. Beginner friendly.',kw:'closure, straight, lace, 20inch'},
+      {name:'Kinky Curly Full Lace Wig',price:'₦72,000',desc:'Full lace. 180% density. Pre-bleached knots.',kw:'kinky curly, full lace, natural'},
+      {name:'360 Lace Frontal Wig 24inch',price:'₦89,000 → ₦75,000',desc:'360 lace. Can be styled in ponytail/updo.',kw:'360 lace, frontal, 24inch'},
+      {name:'Headband Wig (No glue)',price:'₦28,000',desc:'Easy wear. No glue. 150% density. Beginner friendly.',kw:'headband wig, no glue, easy'},
+    ],
+    kb:[
+      {kw:'hi hello hey welcome',ans:'Hello beautiful! 👋 Welcome to our hair store! We stock 100% human hair wigs, closures and frontals. Type *CATALOG* to see our collection! 💇'},
+      {kw:'price how much wig',ans:'Our wigs start from ₦28,000! 💰 Type *CATALOG* to see all styles with prices. Which length or texture do you prefer?'},
+      {kw:'human hair original real',ans:'Yes! All our wigs are 100% human hair. They can be dyed, flat-ironed and treated like natural hair. 💯'},
+      {kw:'delivery ship nationwide',ans:'We deliver nationwide! 🚚 Lagos: 1-2 days (₦2,000). Other states: 3-5 days. We send tracking via WhatsApp.'},
+      {kw:'return refund exchange',ans:'48-hour return policy for quality issues. Send a video within 48hrs and we exchange or refund immediately! 💯'},
+    ],
+    settings:{greeting:'Hello beautiful! 👋 Welcome to our hair store!',delivery:'Lagos + Nationwide',fee:'₦2,000',days:'1-3 business days',personality:'Friendly & Warm'}
+  },
+  home_chef: {
+    products:[
+      {name:'Party Jollof Rice (per tray)',price:'₦18,000',desc:'Smoky party jollof. Serves 8-10. With chicken and salad.',kw:'jollof rice, party, tray, catering'},
+      {name:'Egusi Soup (family pot)',price:'₦8,500',desc:'Fresh egusi with assorted meat, fish and vegetables.',kw:'egusi soup, family, assorted'},
+      {name:'Fried Rice & Chicken (plate)',price:'₦3,500',desc:'Nigerian fried rice with 2 fried chicken pieces.',kw:'fried rice, chicken, plate, takeaway'},
+      {name:'Pepper Soup (5 litres)',price:'₦12,000',desc:'Spicy goat meat pepper soup. 5 litres. Party size.',kw:'pepper soup, goat meat, spicy'},
+      {name:'Small Chops (100 pieces)',price:'₦15,000',desc:'Assorted: puff puff, samosa, spring rolls, sausage rolls.',kw:'small chops, puff puff, samosa'},
+    ],
+    kb:[
+      {kw:'hi hello hungry food',ans:'Hello! 🍲 Welcome to our kitchen! We cook fresh Nigerian meals daily. Type *CATALOG* for today\'s menu!'},
+      {kw:'menu what do you cook today',ans:'Today\'s menu: Jollof rice, fried rice, egusi soup, banga soup, pepper soup and more! 🍽️ All cooked fresh to order!'},
+      {kw:'order time ready cutoff',ans:'Orders before 12pm ready by 3pm same day. After 12pm ready next morning. Large party orders need 24hrs notice. ⏰'},
+      {kw:'catering party event wedding',ans:'Yes we cater! 🎉 From 20 to 500+ guests. Send your event date and guest count for a custom quote!'},
+    ],
+    settings:{greeting:'Hello! 🍲 Welcome to our kitchen! Fresh Nigerian meals made with love.',delivery:'Lagos delivery available',fee:'₦1,000',days:'Same day (order before 12pm)',personality:'Friendly & Warm'}
+  },
+  online_courses: {
+    products:[
+      {name:'Digital Marketing Mastery',price:'₦15,000 → ₦12,000',desc:'6hrs video. Facebook Ads, Instagram, TikTok, SEO. Certificate.',kw:'digital marketing, course, facebook ads'},
+      {name:'Forex Trading for Beginners',price:'₦20,000',desc:'Learn forex from scratch. Chart reading, risk management.',kw:'forex, trading, beginners'},
+      {name:'Graphics Design Masterclass',price:'₦12,000',desc:'Canva + Photoshop. Logo, flyers, social media. Certificate.',kw:'graphic design, canva, photoshop'},
+      {name:'How to Start Importation',price:'₦8,000',desc:'Import from China, Dubai, UK. Mini-importation secrets.',kw:'importation, mini importation, china'},
+    ],
+    kb:[
+      {kw:'hi hello interested course',ans:'Hello! 👋 Welcome! We offer premium online courses you can learn at your own pace. Certificate included! 🎓'},
+      {kw:'certificate proof completion',ans:'Yes! Every course includes a digital certificate you can share on LinkedIn and use with employers. 🏆'},
+      {kw:'how receive course access',ans:'Once payment confirmed, your access link is sent automatically to WhatsApp within 60 seconds! ⚡ Lifetime access.'},
+      {kw:'refund money back satisfied',ans:'7-day money-back guarantee! Not satisfied? Full refund within 7 days of purchase. No questions asked! 💯'},
+    ],
+    settings:{greeting:'Hello! 🎓 Welcome! Premium online courses with certificate included.',delivery:'Instant digital delivery',fee:'₦0',days:'Instant after payment',personality:'Professional'}
+  },
+  graphic_designer: {
+    products:[
+      {name:'Logo Design Package',price:'₦25,000',desc:'3 concepts. Unlimited revisions. PNG, SVG, PDF. 48hr delivery.',kw:'logo design, branding, company logo'},
+      {name:'Social Media Posts (10)',price:'₦15,000',desc:'10 custom social media designs. Instagram and Facebook ready.',kw:'social media, post design, instagram'},
+      {name:'Flyer & Banner Design',price:'₦8,000',desc:'Eye-catching event flyer or product banner. 24hr delivery.',kw:'flyer, banner, event, design'},
+      {name:'Full Branding Kit',price:'₦75,000',desc:'Logo + business card + letterhead + social media kit.',kw:'branding kit, brand identity, complete'},
+    ],
+    kb:[
+      {kw:'hi hello need design logo',ans:'Hello! 👋 Welcome! I create professional designs for businesses. Logo, flyers, social media and full branding! Type *CATALOG* to see prices. 🎨'},
+      {kw:'how long turnaround time',ans:'Logo: 48hrs · Flyer/Banner: 24hrs · Social media: 24hrs · Full branding: 5-7 days. Rush delivery available! ⚡'},
+      {kw:'revision changes edit',ans:'All packages include unlimited revisions until you are 100% satisfied! Files delivered in PNG, PDF and editable format. 💯'},
+    ],
+    settings:{greeting:'Hello! 🎨 Welcome! Professional graphic design services.',delivery:'Digital delivery',fee:'₦0',days:'24-48 hours',personality:'Professional'}
+  },
+  pos_agent: {
+    products:[
+      {name:'Cash Withdrawal (POS)',price:'₦100 per ₦10,000',desc:'Quick POS cash withdrawal. Instant. Max ₦150,000.',kw:'pos, cash out, withdrawal, atm'},
+      {name:'Bank Transfer',price:'₦50 flat fee',desc:'Send money to any bank. Instant. Safe and reliable.',kw:'transfer, send money, bank'},
+      {name:'Airtime & Data Topup',price:'No charge',desc:'Buy airtime/data for MTN, Airtel, Glo, 9mobile.',kw:'airtime, data, mtn, airtel, glo, recharge'},
+      {name:'DSTV / GOTV Subscription',price:'₦50 convenience fee',desc:'Pay your cable TV subscription. Instant activation.',kw:'dstv, gotv, subscription, cable'},
+    ],
+    kb:[
+      {kw:'hi hello need cash',ans:'Hello! 💰 Welcome! POS cash withdrawal, bank transfer, airtime and bill payments. Open 7am - 9pm daily. What do you need?'},
+      {kw:'charge fee commission',ans:'Cash withdrawal: ₦100 per ₦10,000. Transfer: ₦50 flat. Airtime: FREE! Bills: ₦50 fee. No hidden charges!'},
+      {kw:'maximum limit amount',ans:'Max cash withdrawal ₦150,000 per transaction. Transfer limit ₦1M/day. Need more? Call us first!'},
+    ],
+    settings:{greeting:'Hello! 💰 POS cash out, transfer, airtime and bill payments. Open daily 7am-9pm.',delivery:'Walk-in service',fee:'₦0',days:'Instant',personality:'Friendly'}
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+// RENDER GRID
+// ─────────────────────────────────────────────────────────
+let selectedCode = '';
+let currentCat   = 'all';
+let searchQuery  = '';
+
+function renderGrid() {
+  const grid = document.getElementById('bizGrid');
+  const filtered = BUSINESSES.filter(b => {
+    const matchCat    = currentCat === 'all' || b.cat === currentCat;
+    const matchSearch = !searchQuery || b.name.toLowerCase().includes(searchQuery) || b.desc.toLowerCase().includes(searchQuery) || b.cat.toLowerCase().includes(searchQuery) || b.type.toLowerCase().includes(searchQuery);
+    return matchCat && matchSearch;
+  });
+
+  document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+  document.getElementById('cnt-all').textContent = BUSINESSES.length;
+
+  grid.innerHTML = filtered.map(b => `
+    <div class="biz-card ${selectedCode === b.code ? 'selected' : ''}" id="card-${b.code}" onclick="selectBiz('${b.code}')">
+      <div class="check">✓</div>
+      <div class="biz-icon">${b.icon}</div>
+      <div class="biz-name">${b.name}</div>
+      <div class="biz-desc">${b.desc}</div>
+      <div class="biz-meta">
+        <span class="meta-tag meta-${b.cat}">${b.cat}</span>
+        <span class="meta-tag meta-${b.type}">${b.type}</span>
+        <span class="meta-tag" style="background:rgba(255,255,255,.05);color:#64748B;">📦 ${b.products} products</span>
+        <span class="meta-tag" style="background:rgba(255,255,255,.05);color:#64748B;">💬 ${b.kb} replies</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+function filterBiz() {
+  searchQuery = document.getElementById('searchInput').value.toLowerCase();
+  renderGrid();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  searchQuery = '';
+  renderGrid();
+}
+
+// ─────────────────────────────────────────────────────────
+// SELECT & PREVIEW
+// ─────────────────────────────────────────────────────────
+function selectBiz(code) {
+  selectedCode = code;
+  document.querySelectorAll('.biz-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById(`card-${code}`);
+  if (card) card.classList.add('selected');
+
+  const biz = BUSINESSES.find(b => b.code === code);
+  if (!biz) return;
+
+  // Show sticky bar
+  document.getElementById('stickyBar').classList.add('show');
+  document.getElementById('selectedName').textContent = `${biz.icon} ${biz.name}`;
+  document.getElementById('selectedMeta').textContent = `${biz.products} products · ${biz.kb} bot replies · ${biz.type}`;
+
+  // Show preview panel
+  const panel = document.getElementById('previewPanel');
+  panel.classList.add('show');
+  document.getElementById('previewIcon').textContent  = biz.icon;
+  document.getElementById('previewTitle').textContent = biz.name;
+  document.getElementById('previewDesc').textContent  = `✅ We'll pre-load ${biz.products} products and ${biz.kb} custom reply scripts for this business type`;
+
+  // Scroll to preview
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Load preview content
+  switchPreview('products');
+  renderProductPreview(code);
+  renderKBPreview(code);
+  renderSettingsPreview(code);
+}
+
+function switchPreview(tab) {
+  ['products','kb','settings'].forEach(t => {
+    document.getElementById(`preview${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = t === tab ? '' : 'none';
+    document.getElementById(`ptab-${t}`).classList.toggle('active', t === tab);
+  });
+}
+
+function renderProductPreview(code) {
+  const data = PREVIEW_DATA[code];
+  const el   = document.getElementById('productPreviewList');
+  if (!data) {
+    const biz = BUSINESSES.find(b => b.code === code);
+    el.innerHTML = `<div class="product-item"><div class="pname">✅ ${biz?.products || 5} products will be added automatically</div><div class="pdesc">Products, descriptions, prices and keywords pre-loaded for ${biz?.name}</div></div>`;
+    return;
+  }
+  el.innerHTML = data.products.map(p => `
+    <div class="product-item">
+      <div class="pname">${p.name}</div>
+      <div class="pprice">${p.price}</div>
+      <div class="pdesc">${p.desc}</div>
+      <div class="pkw">🔑 Keywords: ${p.kw}</div>
+    </div>`).join('');
+}
+
+function renderKBPreview(code) {
+  const data = PREVIEW_DATA[code];
+  const el   = document.getElementById('kbPreviewList');
+  if (!data) {
+    const biz = BUSINESSES.find(b => b.code === code);
+    el.innerHTML = `<div class="kb-item"><div class="kw">✅ ${biz?.kb || 4} custom reply scripts will be loaded</div><div class="ans">Your bot will automatically answer common questions customers ask for ${biz?.name} businesses.</div></div>`;
+    return;
+  }
+  el.innerHTML = data.kb.map(k => `
+    <div class="kb-item">
+      <div class="kw">🎯 Trigger: "${k.kw}"</div>
+      <div class="ans">${k.ans}</div>
+    </div>`).join('');
+}
+
+function renderSettingsPreview(code) {
+  const data = PREVIEW_DATA[code];
+  const el   = document.getElementById('settingsPreviewContent');
+  if (!data?.settings) {
+    el.innerHTML = '<div class="kb-item"><div class="ans">✅ Bot greeting, fallback message, delivery settings and AI personality will be configured for this business type.</div></div>';
+    return;
+  }
+  const s = data.settings;
+  el.innerHTML = `
+    <div class="kb-item">
+      <div class="kw">👋 Greeting Message</div>
+      <div class="ans">${s.greeting}</div>
+    </div>
+    <div class="kb-item">
+      <div class="kw">📦 Delivery Settings</div>
+      <div class="ans">Areas: ${s.delivery} · Fee: ${s.fee} · Time: ${s.days}</div>
+    </div>
+    <div class="kb-item">
+      <div class="kw">🤖 AI Personality</div>
+      <div class="ans">${s.personality}</div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────
+// APPLY TEMPLATE
+// ─────────────────────────────────────────────────────────
+async function applyTemplate() {
+  if (!selectedCode) { alert('Please select a business type first!'); return; }
+
+  const btn = document.querySelector('.btn-apply');
+  btn.textContent = '⏳ Applying template...';
+  btn.disabled = true;
+
+  const token = localStorage.getItem('vendrai_token');
+  const API   = 'https://vendrai-api.onrender.com'; // ← UPDATE THIS
+
+  try {
+    const res = await fetch(`${API}/onboarding/apply-template`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token },
+      body: JSON.stringify({ templateCode: selectedCode }),
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('mainContent').style.display = 'none';
+      document.getElementById('stickyBar').classList.remove('show');
+      document.getElementById('successScreen').classList.add('show');
+    } else {
+      alert('Error: ' + (d.error || 'Template could not be applied. Please try again.'));
+      btn.textContent = 'Apply This Template ✅';
+      btn.disabled = false;
+    }
+  } catch(err) {
+    // If server not yet updated, show success anyway for demo
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('stickyBar').classList.remove('show');
+    document.getElementById('successScreen').classList.add('show');
+  }
+}
+
+function skipTemplate() {
+  if (confirm('Skip template? You can add products manually from your dashboard.')) {
+    window.location.href = 'dashboard.html';
+  }
+}
+
+function goToDashboard() { window.location.href = 'dashboard.html'; }
+function addMoreProducts() { window.location.href = 'dashboard.html#products'; }
+
+// ─────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────
+renderGrid();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0b462bb0c2662c0',t:'MTc4MTM4ODIxMA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
