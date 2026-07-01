@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VendrAI Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:#0B0F1A;color:#E2E8F0;margin:0;}
+:root{--green:#25D366;--card:#111827;--border:rgba(255,255,255,0.07);}
+
+/* LAYOUT */
+.sidebar{width:220px;min-height:100vh;background:#0F172A;border-right:1px solid var(--border);position:fixed;top:0;left:0;z-index:40;display:flex;flex-direction:column;overflow-y:auto;}
+.main{margin-left:220px;min-height:100vh;padding-bottom:40px;}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}}
+
+/* SIDEBAR LINKS */
+.slink{display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:9px;cursor:pointer;color:#94A3B8;font-size:.83rem;font-weight:500;text-decoration:none;transition:all .2s;margin:2px 8px;}
+.slink:hover,.slink.active{background:rgba(37,211,102,.1);color:#25D366;}
+.slink.admin-link{color:#F59E0B;}
+.slink.admin-link:hover,.slink.admin-link.active{background:rgba(245,158,11,.1);color:#F59E0B;}
+
+/* PLAN BADGES */
+.plan-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:.68rem;font-weight:800;letter-spacing:.05em;}
+.plan-free{background:rgba(100,116,139,.2);color:#94A3B8;}
+.plan-starter{background:rgba(59,130,246,.2);color:#60A5FA;}
+.plan-growth{background:rgba(37,211,102,.2);color:#25D366;}
+.plan-pro{background:rgba(168,85,247,.2);color:#C084FC;}
+.plan-admin{background:rgba(245,158,11,.2);color:#F59E0B;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:border-color .2s;}
+.card:hover{border-color:rgba(37,211,102,.2);}
+
+/* BUTTONS */
+.btn-g{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:8px 18px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-g:hover{opacity:.9;transform:translateY(-1px);}
+.btn-o{background:rgba(255,255,255,.05);color:#CBD5E1;border:1px solid rgba(255,255,255,.1);padding:8px 14px;border-radius:9px;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-o:hover{background:rgba(255,255,255,.09);}
+.btn-r{background:rgba(239,68,68,.1);color:#F87171;border:1px solid rgba(239,68,68,.2);padding:6px 12px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;}
+.btn-y{background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.2);padding:6px 12px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;}
+.btn-b{background:rgba(59,130,246,.1);color:#60A5FA;border:1px solid rgba(59,130,246,.2);padding:6px 12px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;}
+
+/* INPUTS */
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:10px 13px;color:#fff;font-size:.83rem;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:#25D366;}
+.inp::placeholder{color:#4B5563;}
+select.inp option{background:#1F2937;}
+textarea.inp{resize:vertical;min-height:80px;}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.68rem;font-weight:700;}
+.bg{background:rgba(37,211,102,.12);color:#25D366;}
+.bb{background:rgba(59,130,246,.12);color:#60A5FA;}
+.by{background:rgba(245,158,11,.12);color:#FCD34D;}
+.br{background:rgba(239,68,68,.12);color:#F87171;}
+.bgr{background:rgba(100,116,139,.12);color:#94A3B8;}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:.81rem;}
+th{text-align:left;padding:11px 14px;font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#64748B;border-bottom:1px solid var(--border);}
+td{padding:12px 14px;color:#CBD5E1;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top;}
+tr:hover td{background:rgba(255,255,255,.02);}
+
+/* LOADING */
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.1);border-top-color:#25D366;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:26px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:999;transform:translateY(100px);opacity:0;transition:all .4s;min-width:260px;background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 18px;font-size:.83rem;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* PROGRESS BAR */
+.pbar{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,#25D366,#128C7E);border-radius:4px;transition:width .8s ease;}
+
+/* ADMIN PANEL */
+.admin-section{border:2px solid rgba(245,158,11,.2);border-radius:16px;background:rgba(245,158,11,.04);}
+.admin-header{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(239,68,68,.1));border-radius:12px;padding:16px;margin-bottom:20px;}
+
+/* TOGGLE SWITCH */
+.toggle{position:relative;display:inline-block;width:42px;height:23px;}
+.toggle input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;cursor:pointer;inset:0;background:#374151;border-radius:23px;transition:.3s;}
+.tslider:before{position:absolute;content:"";height:17px;width:17px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.tslider{background:#25D366;}
+input:checked+.tslider:before{transform:translateX(19px);}
+
+/* LOGOUT BUTTON - always visible */
+.logout-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:9px;cursor:pointer;color:#F87171;font-size:.83rem;font-weight:600;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);margin:8px;transition:all .2s;width:calc(100% - 16px);}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div style="padding:16px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🤖</div>
+      <span style="font-weight:900;font-size:1.1rem;">Vendr<span style="color:#25D366">AI</span></span>
+    </div>
+    <div id="sidebarUser" style="font-size:.75rem;color:#64748B;">Loading...</div>
+    <div id="sidebarPlan" style="margin-top:6px;"></div>
+  </div>
+
+  <nav style="padding:8px;flex:1;">
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;">Main</div>
+    <a onclick="show('overview')"  class="slink active" id="nav-overview">📊 Overview</a>
+    <a onclick="show('setup')"     class="slink" id="nav-setup">🚀 Setup Wizard</a>
+    <a onclick="show('templates')" class="slink" id="nav-templates">🏪 Business Templates</a>
+    <a onclick="show('products')"  class="slink" id="nav-products">🛍️ Products</a>
+    <a onclick="show('orders')"    class="slink" id="nav-orders">📦 Orders</a>
+    <a onclick="show('contacts')"  class="slink" id="nav-contacts">👥 Contacts</a>
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;margin-top:8px;">Bot</div>
+    <a onclick="show('kb')"        class="slink" id="nav-kb">📚 Knowledge Base</a>
+    <a onclick="show('ailog')"     class="slink" id="nav-ailog">🤖 AI Learning</a>
+    <a onclick="show('broadcast')" class="slink" id="nav-broadcast">📣 Broadcast</a>
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;margin-top:8px;">Account</div>
+    <a onclick="show('referral')"  class="slink" id="nav-referral">🎁 Referrals</a>
+    <a onclick="show('settings')"  class="slink" id="nav-settings">⚙️ Settings</a>
+    <a onclick="show('profile')"   class="slink" id="nav-profile">👤 Profile</a>
+    <!-- ADMIN PANEL - only visible to admin -->
+    <div id="adminNavSection" style="display:none;">
+      <div style="font-size:.65rem;color:#F59E0B;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;margin-top:8px;">⚠️ Admin</div>
+      <a onclick="show('admin')" class="slink admin-link" id="nav-admin">👑 Admin Panel</a>
+    </div>
+  </nav>
+
+  <!-- LOGOUT BUTTON - always at bottom, always visible -->
+  <div style="padding:8px;border-top:1px solid var(--border);margin-top:auto;">
+    <a href="pricing.html" class="btn-g" style="display:block;text-align:center;font-size:.75rem;margin-bottom:8px;text-decoration:none;">⚡ Upgrade Plan</a>
+    <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+    <button onclick="logoutAll()" class="logout-btn" style="font-size:.7rem;padding:7px 14px;margin-top:4px;opacity:.7;">🚪 Logout All Devices</button>
+  </div>
+</aside>
+
+<!-- MOBILE TOP BAR -->
+<div class="md:hidden" style="position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(11,15,26,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+  <button onclick="document.getElementById('sidebar').classList.toggle('open')" style="background:none;border:none;color:#94A3B8;font-size:1.2rem;cursor:pointer;">☰</button>
+  <span style="font-weight:900;">Vendr<span style="color:#25D366">AI</span></span>
+  <button onclick="logout()" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#F87171;font-size:.72rem;padding:5px 10px;border-radius:7px;cursor:pointer;">Logout</button>
+</div>
+
+<main class="main" style="padding-top:0;">
+
+<!-- ══════════ OVERVIEW ══════════ -->
+<section id="sec-overview" style="padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:900;">Dashboard Overview</h1>
+      <p id="welcomeMsg" style="color:#64748B;font-size:.83rem;margin-top:3px;"></p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="loadOverview()" class="btn-o" style="font-size:.75rem;">🔄 Refresh</button>
+      <button onclick="show('broadcast')" class="btn-g" style="font-size:.75rem;">📣 Broadcast</button>
+    </div>
+  </div>
+
+  <!-- Trial warning -->
+  <div id="trialBanner" style="display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:.83rem;color:#FCD34D;">⚠️ <strong>Free trial active.</strong> <span id="trialDaysLeft"></span> days left. Upgrade to keep full access!</div>
+    <a href="pricing.html" class="btn-g" style="font-size:.75rem;text-decoration:none;">Upgrade Now →</a>
+  </div>
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;" id="statsGrid">
+    <div class="card"><div style="color:#64748B;font-size:.72rem;margin-bottom:4px;">Contacts</div><div id="s-contacts" style="font-size:1.8rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.72rem;margin-bottom:4px;">Orders</div><div id="s-orders" style="font-size:1.8rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.72rem;margin-bottom:4px;">Revenue</div><div id="s-revenue" style="font-size:1.8rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.72rem;margin-bottom:4px;">Products</div><div id="s-products" style="font-size:1.8rem;font-weight:900;color:#25D366;">—</div></div>
+  </div>
+
+  <!-- Reply usage -->
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+      <span style="font-weight:700;font-size:.9rem;">Monthly Reply Usage</span>
+      <span id="usagePct" style="color:#25D366;font-weight:700;font-size:.85rem;">0%</span>
+    </div>
+    <div class="pbar"><div class="pfill" id="usageBar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:#64748B;margin-top:6px;">
+      <span id="usageLow">0 used</span><span id="usageHigh">100 limit</span>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:10px;font-size:.75rem;">
+      <span><span id="s-kbhits" style="color:#25D366;font-weight:700;">0</span> <span style="color:#64748B;">KB (instant)</span></span>
+      <span><span id="s-aicalls" style="color:#60A5FA;font-weight:700;">0</span> <span style="color:#64748B;">AI replies</span></span>
+    </div>
+  </div>
+
+  <!-- Setup Progress -->
+  <div class="card" id="setupProgressCard" style="margin-bottom:20px;">
+    <div style="font-weight:700;font-size:.9rem;margin-bottom:14px;">🚀 Setup Progress</div>
+    <div id="progressSteps" class="space-y-2"></div>
+    <button onclick="show('setup')" class="btn-g" style="font-size:.75rem;margin-top:14px;">Continue Setup →</button>
+  </div>
+
+  <!-- Quick actions -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+    <div class="card" style="cursor:pointer;text-align:center;" onclick="show('templates')"><div style="font-size:1.6rem;margin-bottom:6px;">🏪</div><div style="font-weight:700;font-size:.8rem;">Business Templates</div><div style="color:#64748B;font-size:.72rem;margin-top:2px;">100 types preloaded</div></div>
+    <div class="card" style="cursor:pointer;text-align:center;" onclick="show('products')"><div style="font-size:1.6rem;margin-bottom:6px;">🛍️</div><div style="font-weight:700;font-size:.8rem;">Add Products</div><div style="color:#64748B;font-size:.72rem;margin-top:2px;">Build your catalog</div></div>
+    <div class="card" style="cursor:pointer;text-align:center;" onclick="show('ailog')"><div style="font-size:1.6rem;margin-bottom:6px;">🤖</div><div style="font-weight:700;font-size:.8rem;">AI Learning</div><div id="aiPending" style="color:#FCD34D;font-size:.72rem;margin-top:2px;">0 to review</div></div>
+  </div>
+</section>
+
+<!-- ══════════ SETUP WIZARD ══════════ -->
+<section id="sec-setup" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:6px;">🚀 Setup Wizard</h2>
+  <p style="color:#64748B;font-size:.83rem;margin-bottom:24px;">Complete each step to get your bot fully working.</p>
+  <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;">
+    <button class="btn-o active-tab" id="wtab-1" onclick="wStep(1)" style="font-size:.78rem;">1. Business</button>
+    <button class="btn-o" id="wtab-2" onclick="wStep(2)" style="font-size:.78rem;">2. WhatsApp</button>
+    <button class="btn-o" id="wtab-3" onclick="wStep(3)" style="font-size:.78rem;">3. Bot Messages</button>
+  </div>
+  <!-- Step 1 -->
+  <div id="wstep-1" style="max-width:580px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="grid-column:1/-1;"><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Business Name *</label><input id="biz-name" class="inp" placeholder="e.g. Amara Fashion Boutique"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Category</label><select id="biz-cat" class="inp"><option value="fashion">Fashion</option><option value="food">Food</option><option value="tech">Tech</option><option value="beauty">Beauty</option><option value="health">Health</option><option value="education">Education</option><option value="services">Services</option><option value="agric">Agriculture</option><option value="other">Other</option></select></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Support Phone</label><input id="biz-cphone" class="inp" placeholder="+2348012345678"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">City</label><input id="biz-city" class="inp" placeholder="Lagos"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">State</label><input id="biz-state" class="inp" placeholder="Lagos State"/></div>
+      <div style="grid-column:1/-1;"><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Description</label><textarea id="biz-desc" class="inp" rows="2" placeholder="What do you sell?"></textarea></div>
+      <div style="grid-column:1/-1;"><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Delivery Areas (comma separated)</label><input id="biz-dareas" class="inp" placeholder="Lagos, Abuja, Nationwide"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Delivery Fee (₦)</label><input id="biz-dfee" type="number" class="inp" placeholder="1000"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Delivery Days</label><input id="biz-ddays" class="inp" placeholder="1-3 business days"/></div>
+    </div>
+    <button onclick="saveBusinessInfo()" class="btn-g" style="margin-top:16px;padding:10px 24px;">Save & Continue →</button>
+  </div>
+  <!-- Step 2 -->
+  <div id="wstep-2" style="display:none;max-width:580px;">
+    <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:.8rem;color:#93C5FD;">📋 Go to developers.facebook.com → Your App → WhatsApp → API Setup to find these values.</div>
+    <div style="display:grid;gap:12px;">
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">WhatsApp Phone Number ID *</label><input id="wa-phoneid" class="inp" placeholder="e.g. 123456789012345"/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">WhatsApp Access Token *</label><input id="wa-token" type="password" class="inp" placeholder="EAAxxxxxxxxxx"/></div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;"><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Paystack Public Key (optional)</label><input id="ps-pub" class="inp" placeholder="pk_live_..."/></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Paystack Secret Key (optional)</label><input id="ps-sec" type="password" class="inp" placeholder="sk_live_..."/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="wStep(1)" class="btn-o" style="font-size:.8rem;">← Back</button>
+      <button onclick="saveWhatsApp()" class="btn-g" style="padding:10px 24px;">Save & Continue →</button>
+    </div>
+  </div>
+  <!-- Step 3 -->
+  <div id="wstep-3" style="display:none;max-width:580px;">
+    <div style="display:grid;gap:12px;">
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">AI Personality</label><select id="bot-personality" class="inp"><option value="friendly">Friendly & Warm</option><option value="professional">Professional</option><option value="casual">Casual & Fun</option></select></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Greeting Message</label><textarea id="bot-greeting" class="inp" rows="2" placeholder="Hello! Welcome to our store! Type MENU for options."></textarea></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Fallback Message</label><textarea id="bot-fallback" class="inp" rows="2" placeholder="I am not sure about that. Type MENU for options!"></textarea></div>
+      <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Special Instructions for AI</label><textarea id="bot-custom" class="inp" rows="2" placeholder="e.g. Always mention our free delivery offer..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Business Hours Start</label><input id="bot-start" type="time" class="inp" value="08:00"/></div>
+        <div><label style="font-size:.75rem;color:#9CA3AF;display:block;margin-bottom:5px;">Business Hours End</label><input id="bot-end" type="time" class="inp" value="20:00"/></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="wStep(2)" class="btn-o" style="font-size:.8rem;">← Back</button>
+      <button onclick="saveBotMessages()" class="btn-g" style="padding:10px 24px;">Save Settings ✅</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ BUSINESS TEMPLATES ══════════ -->
+<section id="sec-templates" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:6px;">🏪 Business Templates</h2>
+  <p style="color:#64748B;font-size:.83rem;margin-bottom:20px;">Pick your business type to auto-load products, bot replies and settings. You can edit everything after.</p>
+  <!-- Search & filter -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <input id="tplSearch" class="inp" style="max-width:260px;font-size:.8rem;" placeholder="🔍 Search business type..." oninput="filterTemplates()"/>
+    <select id="tplCat" class="inp" style="max-width:160px;font-size:.8rem;" onchange="filterTemplates()">
+      <option value="">All Categories</option>
+      <option value="fashion">Fashion</option>
+      <option value="food">Food</option>
+      <option value="tech">Tech</option>
+      <option value="beauty">Beauty</option>
+      <option value="education">Education</option>
+      <option value="services">Services</option>
+      <option value="health">Health</option>
+      <option value="agric">Agriculture</option>
+      <option value="home">Home</option>
+    </select>
+  </div>
+  <div id="templateGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+    <div style="text-align:center;padding:30px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div>Loading templates...</div>
+  </div>
+</section>
+
+<!-- ══════════ PRODUCTS ══════════ -->
+<section id="sec-products" style="display:none;padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <h2 style="font-size:1.3rem;font-weight:900;">🛍️ Products</h2>
+      <p style="color:#64748B;font-size:.83rem;margin-top:3px;">Your product catalog. Bot uses this to answer price questions and take orders.</p>
+    </div>
+    <button onclick="openAddProduct()" class="btn-g" style="font-size:.8rem;">+ Add Product</button>
+  </div>
+  <div id="productsList"><div style="text-align:center;padding:30px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div></div>
+</section>
+
+<!-- ══════════ ORDERS ══════════ -->
+<section id="sec-orders" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:20px;">📦 Orders</h2>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="btn-o" onclick="loadOrders('all')" style="font-size:.75rem;">All</button>
+    <button class="btn-o" onclick="loadOrders('pending')" style="font-size:.75rem;">Pending</button>
+    <button class="btn-o" onclick="loadOrders('paid')" style="font-size:.75rem;">Paid</button>
+    <button class="btn-o" onclick="loadOrders('delivered')" style="font-size:.75rem;">Delivered</button>
+  </div>
+  <div class="card" style="overflow:hidden;"><div id="ordersTable"></div></div>
+</section>
+
+<!-- ══════════ CONTACTS ══════════ -->
+<section id="sec-contacts" style="display:none;padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <h2 style="font-size:1.3rem;font-weight:900;">👥 Contacts</h2>
+    <input id="contactSearch" class="inp" style="max-width:220px;font-size:.8rem;" placeholder="🔍 Search..." oninput="loadContacts()"/>
+  </div>
+  <div class="card" style="overflow:hidden;"><div id="contactsTable"></div></div>
+</section>
+
+<!-- ══════════ KNOWLEDGE BASE ══════════ -->
+<section id="sec-kb" style="display:none;padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <h2 style="font-size:1.3rem;font-weight:900;">📚 Knowledge Base</h2>
+      <p style="color:#64748B;font-size:.83rem;margin-top:3px;">Pre-set answers your bot uses instantly — no AI cost.</p>
+    </div>
+    <button onclick="document.getElementById('addKbModal').style.display='flex'" class="btn-g" style="font-size:.8rem;">+ Add Answer</button>
+  </div>
+  <input id="kbSearch" class="inp" style="max-width:280px;font-size:.8rem;margin-bottom:16px;" placeholder="🔍 Search keywords..." oninput="filterKB()"/>
+  <div id="kbEntries" style="display:grid;gap:10px;"></div>
+</section>
+
+<!-- ══════════ AI LEARNING ══════════ -->
+<section id="sec-ailog" style="display:none;padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <div>
+      <h2 style="font-size:1.3rem;font-weight:900;">🤖 AI Self-Healing Loop</h2>
+      <p style="color:#64748B;font-size:.83rem;margin-top:3px;">Promote AI responses to KB — future replies become instant and free.</p>
+    </div>
+    <button onclick="autoPromoteAll()" class="btn-g" style="font-size:.8rem;">⚡ Auto-Promote All</button>
+  </div>
+  <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:12px;margin-bottom:16px;font-size:.8rem;color:#93C5FD;">ℹ️ When AI answers a question, it logs here. Click <strong>Promote to KB</strong> to make future identical questions reply instantly — saving AI quota.</div>
+  <div id="aiLogEntries" style="display:grid;gap:12px;"></div>
+</section>
+
+<!-- ══════════ BROADCAST ══════════ -->
+<section id="sec-broadcast" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:6px;">📣 Broadcast</h2>
+  <p style="color:#64748B;font-size:.83rem;margin-bottom:20px;">Send WhatsApp messages to all or segments of your contacts.</p>
+  <div id="broadcastLock" style="display:none;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px;">
+    <div style="font-size:2rem;margin-bottom:8px;">🔒</div>
+    <div style="font-weight:700;color:#FCD34D;margin-bottom:6px;">Broadcast requires Starter plan or higher</div>
+    <a href="pricing.html" class="btn-g" style="text-decoration:none;display:inline-block;font-size:.8rem;margin-top:8px;">Upgrade Now →</a>
+  </div>
+  <div id="broadcastForm" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">Compose Message</div>
+      <div style="display:grid;gap:10px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Title</label><input id="broad-title" class="inp" placeholder="Weekend Promo"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Message *</label><textarea id="broad-msg" class="inp" rows="5" placeholder="Hey {name}! Special offer for you..."></textarea><div style="font-size:.7rem;color:#4B5563;margin-top:3px;">Use {name} for personalization</div></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Target Tags (optional)</label><input id="broad-tags" class="inp" placeholder="vip, repeat-buyer"/></div>
+        <button onclick="sendBroadcast()" class="btn-g" style="width:100%;padding:10px;">📤 Send Now</button>
+        <div id="broadResult" style="display:none;font-size:.8rem;padding:10px;background:rgba(37,211,102,.06);border:1px solid rgba(37,211,102,.15);border-radius:8px;color:#4ADE80;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px;font-size:.9rem;">💡 Tips</div>
+      <ul style="font-size:.8rem;color:#94A3B8;display:grid;gap:8px;list-style:none;padding:0;">
+        <li>✅ Use {name} — 35% higher open rate</li>
+        <li>✅ Best time: 8-10 AM or 6-8 PM WAT</li>
+        <li>✅ Include a clear call to action</li>
+        <li>⚠️ Only message opted-in customers</li>
+        <li>📊 Limit: <span id="broadLimit">—</span> contacts/blast</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ REFERRALS ══════════ -->
+<section id="sec-referral" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:20px;">🎁 Referral Engine</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">Your Referral Code</div>
+      <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:16px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:1.6rem;font-weight:900;color:#25D366;letter-spacing:.1em;" id="refCode">—</div>
+      </div>
+      <div style="margin-bottom:10px;"><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Share this link</label><div style="display:flex;gap:6px;"><input id="refLink" class="inp" style="font-size:.75rem;" readonly/><button onclick="copyRef()" class="btn-o" style="font-size:.73rem;white-space:nowrap;">Copy</button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:.8rem;text-align:center;">
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;"><div style="font-size:1.3rem;font-weight:900;color:#25D366;" id="totalRefs">0</div><div style="color:#64748B;">Total Referrals</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;"><div style="font-size:1.3rem;font-weight:900;color:#60A5FA;" id="convRefs">0</div><div style="color:#64748B;">Converted</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:12px;font-size:.9rem;">🎁 Rewards</div>
+      <div style="display:grid;gap:8px;font-size:.8rem;">
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;display:flex;justify-content:space-between;"><div><strong>3 referrals</strong><div style="color:#64748B;">Any 3 signups</div></div><div style="color:#25D366;font-weight:700;">+1 Month FREE 🎉</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;display:flex;justify-content:space-between;"><div><strong>10 referrals</strong><div style="color:#64748B;">10 signups</div></div><div style="color:#C084FC;font-weight:700;">Ambassador 👑</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;display:flex;justify-content:space-between;"><div><strong>Ambassador</strong><div style="color:#64748B;">Per paid upgrade</div></div><div style="color:#FCD34D;font-weight:700;">10% recurring 💰</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SETTINGS ══════════ -->
+<section id="sec-settings" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:20px;">⚙️ Bot Settings</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">Bot Behavior</div>
+      <div style="display:grid;gap:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.83rem;font-weight:600;">Auto-Reply</div><div style="font-size:.72rem;color:#64748B;">Reply to all messages</div></div><label class="toggle"><input type="checkbox" id="set-autoreply" onchange="saveSetting('auto_reply',this.checked)"><span class="tslider"></span></label></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.83rem;font-weight:600;">AI Enabled</div><div style="font-size:.72rem;color:#64748B;">Qwen AI on KB miss</div></div><label class="toggle"><input type="checkbox" id="set-ai" onchange="saveSetting('ai_enabled',this.checked)"><span class="tslider"></span></label></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.83rem;font-weight:600;">Lead Capture</div><div style="font-size:.72rem;color:#64748B;">Save chatters as contacts</div></div><label class="toggle"><input type="checkbox" id="set-leads" onchange="saveSetting('collect_leads',this.checked)"><span class="tslider"></span></label></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.83rem;font-weight:600;">Away Mode</div><div style="font-size:.72rem;color:#64748B;">Send away message</div></div><label class="toggle"><input type="checkbox" id="set-away" onchange="saveSetting('away_mode',this.checked)"><span class="tslider"></span></label></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.83rem;font-weight:600;">Watermark</div><div style="font-size:.72rem;color:#64748B;">"Powered by VendrAI"</div></div><label class="toggle"><input type="checkbox" id="set-watermark" onchange="saveSetting('watermark',this.checked)"><span class="tslider"></span></label></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">Webhook Info</div>
+      <div style="display:grid;gap:10px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Webhook URL (copy to Meta)</label><div style="display:flex;gap:6px;"><input id="webhookUrl" class="inp" style="font-size:.72rem;" readonly/><button onclick="copyWebhook()" class="btn-o" style="font-size:.72rem;">Copy</button></div></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Verify Token</label><input class="inp" style="font-size:.72rem;" readonly value="vendrai_secret_2024"/></div>
+        <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:8px;padding:10px;font-size:.75rem;color:#93C5FD;">Paste the Webhook URL into Meta → WhatsApp → Configuration → Edit Webhook</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PROFILE ══════════ -->
+<section id="sec-profile" style="display:none;padding:24px 28px;">
+  <h2 style="font-size:1.3rem;font-weight:900;margin-bottom:20px;">👤 My Profile</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:800px;">
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">Account Info</div>
+      <div style="display:grid;gap:10px;font-size:.83rem;">
+        <div><span style="color:#64748B;">Username:</span> <span id="prof-username" style="font-weight:600;">—</span></div>
+        <div><span style="color:#64748B;">Email:</span> <span id="prof-email">—</span> <span id="emailVerBadge"></span></div>
+        <div><span style="color:#64748B;">Phone:</span> <span id="prof-phone">—</span></div>
+        <div><span style="color:#64748B;">Plan:</span> <span id="prof-plan" style="font-weight:700;color:#25D366;">—</span></div>
+        <div><span style="color:#64748B;">Member since:</span> <span id="prof-since">—</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.9rem;">🔒 Change Password</div>
+      <div style="display:grid;gap:10px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Current Password</label><input id="pw-current" type="password" class="inp" placeholder="Current password"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">New Password</label><input id="pw-new" type="password" class="inp" placeholder="At least 8 characters"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Confirm New Password</label><input id="pw-confirm" type="password" class="inp" placeholder="Repeat new password"/></div>
+        <button onclick="changePassword()" class="btn-g" style="width:100%;padding:10px;">Update Password</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ ADMIN PANEL ══════════ -->
+<section id="sec-admin" style="display:none;padding:24px 28px;">
+  <div class="admin-section" style="padding:20px;">
+    <div class="admin-header">
+      <h2 style="font-size:1.3rem;font-weight:900;color:#F59E0B;">👑 Founder Admin Panel</h2>
+      <p style="color:#FCD34D;font-size:.83rem;margin-top:4px;">Full platform access. Test any feature. Manage all subscribers.</p>
+    </div>
+
+    <!-- Override plan for testing -->
+    <div class="card" style="margin-bottom:16px;border-color:rgba(245,158,11,.2);">
+      <div style="font-weight:700;margin-bottom:12px;font-size:.88rem;color:#F59E0B;">🧪 Test Any Plan Feature</div>
+      <div style="font-size:.8rem;color:#94A3B8;margin-bottom:12px;">Switch your account to any plan instantly to test features. This is for testing only — does not charge you.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="adminSetPlan('free')"    class="btn-o" style="font-size:.78rem;">Free Plan</button>
+        <button onclick="adminSetPlan('starter')" class="btn-b" style="font-size:.78rem;">Starter Plan</button>
+        <button onclick="adminSetPlan('growth')"  class="btn-g" style="font-size:.78rem;">Growth Plan</button>
+        <button onclick="adminSetPlan('pro')"     style="background:rgba(168,85,247,.1);color:#C084FC;border:1px solid rgba(168,85,247,.2);padding:6px 12px;border-radius:8px;font-size:.78rem;cursor:pointer;">Pro Plan</button>
+      </div>
+      <div id="planSwitchResult" style="display:none;margin-top:10px;font-size:.78rem;color:#4ADE80;"></div>
+    </div>
+
+    <!-- All subscribers -->
+    <div class="card" style="margin-bottom:16px;border-color:rgba(245,158,11,.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-weight:700;font-size:.88rem;color:#F59E0B;">📊 All Subscribers</div>
+        <button onclick="loadAllSubscribers()" class="btn-o" style="font-size:.73rem;">Refresh</button>
+      </div>
+      <div id="subscribersList"><div style="text-align:center;padding:20px;color:#64748B;font-size:.8rem;">Click Refresh to load all subscribers</div></div>
+    </div>
+
+    <!-- Platform stats -->
+    <div class="card" style="margin-bottom:16px;border-color:rgba(245,158,11,.2);">
+      <div style="font-weight:700;margin-bottom:12px;font-size:.88rem;color:#F59E0B;">📈 Platform Statistics</div>
+      <div id="platformStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center;"><div id="stat-total-biz" style="font-size:1.4rem;font-weight:900;color:#25D366;">—</div><div style="font-size:.72rem;color:#64748B;">Total Businesses</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center;"><div id="stat-active-biz" style="font-size:1.4rem;font-weight:900;color:#4ADE80;">—</div><div style="font-size:.72rem;color:#64748B;">Active Businesses</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center;"><div id="stat-total-orders" style="font-size:1.4rem;font-weight:900;color:#60A5FA;">—</div><div style="font-size:.72rem;color:#64748B;">Total Orders</div></div>
+        <div style="background:rgba(255,255,255,.04);border-radius:8px;padding:12px;text-align:center;"><div id="stat-total-rev" style="font-size:1.4rem;font-weight:900;color:#C084FC;">—</div><div style="font-size:.72rem;color:#64748B;">Total Revenue</div></div>
+      </div>
+      <button onclick="loadPlatformStats()" class="btn-o" style="font-size:.75rem;margin-top:12px;">Load Stats</button>
+    </div>
+
+    <!-- Staff roles -->
+    <div class="card" style="margin-bottom:16px;border-color:rgba(245,158,11,.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div style="font-weight:700;font-size:.88rem;color:#F59E0B;">👥 VendrAI Staff Roles</div>
+          <div style="font-size:.74rem;color:#94A3B8;margin-top:3px;">Give recruited VendrAI staff limited admin access. Owner remains protected in Render.</div>
+        </div>
+        <button onclick="loadStaffRoles()" class="btn-o" style="font-size:.73rem;">Refresh</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 150px 1.4fr auto;gap:8px;margin-bottom:12px;">
+        <input id="staff-username" class="inp" style="font-size:.78rem;" placeholder="staff username e.g. support1"/>
+        <select id="staff-role" class="inp" style="font-size:.78rem;"><option value="viewer">Viewer</option><option value="support">Support</option><option value="manager">Manager</option></select>
+        <input id="staff-notes" class="inp" style="font-size:.78rem;" placeholder="notes e.g. Lagos sales support"/>
+        <button onclick="addStaffRole()" class="btn-y" style="font-size:.73rem;">Add Staff</button>
+      </div>
+      <div id="staffRolesList"><div style="text-align:center;padding:16px;color:#64748B;font-size:.8rem;">Click Refresh to load staff roles</div></div>
+    </div>
+
+    <!-- WhatsApp debug -->
+    <div class="card" style="border-color:rgba(245,158,11,.2);">
+      <div style="font-weight:700;margin-bottom:12px;font-size:.88rem;color:#F59E0B;">🔧 WhatsApp Bot Debug</div>
+      <div style="font-size:.8rem;color:#94A3B8;margin-bottom:10px;">Send a test message to diagnose if your bot is responding correctly.</div>
+      <div style="display:grid;gap:8px;margin-bottom:10px;">
+        <input id="debug-phone" class="inp" style="font-size:.8rem;" placeholder="Phone to send test to (e.g. +2348012345678)"/>
+        <input id="debug-msg"   class="inp" style="font-size:.8rem;" placeholder="Test message (e.g. Hello)"/>
+      </div>
+      <button onclick="sendTestMessage()" class="btn-y" style="font-size:.78rem;">Send Test Message</button>
+      <div id="debugResult" style="display:none;margin-top:10px;font-size:.78rem;padding:8px;background:rgba(255,255,255,.04);border-radius:8px;color:#CBD5E1;"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- ADD KB MODAL -->
+<div id="addKbModal" style="display:none;" class="modal-bg" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3 style="font-size:1.1rem;font-weight:900;margin-bottom:4px;">Add Knowledge Base Entry</h3>
+    <p style="color:#64748B;font-size:.78rem;margin-bottom:16px;">When a customer types a matching keyword, bot replies instantly — no AI needed.</p>
+    <div style="display:grid;gap:10px;">
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Trigger Keywords *</label><input id="kb-kw" class="inp" placeholder="e.g. price, how much, delivery, do you deliver"/></div>
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Reply Answer *</label><textarea id="kb-ans" class="inp" rows="4" placeholder="Our prices start from ₦5,000. Type CATALOG to see all products!"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Category</label><select id="kb-cat" class="inp"><option value="general">General</option><option value="product">Product</option><option value="order">Order</option><option value="payment">Payment</option><option value="delivery">Delivery</option><option value="faq">FAQ</option></select></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Language</label><select id="kb-lang" class="inp"><option value="en">English</option><option value="pidgin">Pidgin</option><option value="yo">Yoruba</option><option value="ig">Igbo</option><option value="ha">Hausa</option></select></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="document.getElementById('addKbModal').style.display='none'" class="btn-o" style="flex:1;">Cancel</button>
+      <button onclick="addKB()" class="btn-g" style="flex:1;">Add to KB ✅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT PRODUCT MODAL -->
+<div id="productModal" style="display:none;" class="modal-bg" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3 id="productModalTitle" style="font-size:1.1rem;font-weight:900;margin-bottom:16px;">Add Product</h3>
+    <input type="hidden" id="p-edit-id"/>
+    <div style="display:grid;gap:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="grid-column:1/-1;"><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Product Name *</label><input id="p-name" class="inp" placeholder="e.g. Premium Wig 24inch"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">SKU/Code</label><input id="p-sku" class="inp" placeholder="WIG-001"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Category</label><input id="p-cat" class="inp" placeholder="fashion, food, tech..."/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Price *</label><input id="p-price" type="number" class="inp" placeholder="15000"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Sale Price</label><input id="p-saleprice" type="number" class="inp" placeholder="Optional"/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Currency</label><select id="p-curr" class="inp"><option value="NGN">NGN (₦)</option><option value="GHS">GHS (₵)</option><option value="KES">KES</option><option value="USD">USD ($)</option></select></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Type</label><select id="p-type" class="inp" onchange="toggleDigitalFields(this.value)"><option value="physical">📦 Physical</option><option value="digital">⚡ Digital</option></select></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Stock (blank=unlimited)</label><input id="p-stock" type="number" class="inp" placeholder="Unlimited"/></div>
+      </div>
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Description</label><textarea id="p-desc" class="inp" rows="2" placeholder="Short product description..."></textarea></div>
+      <div id="digitalFields" style="display:none;display:grid;gap:8px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Download Link</label><input id="p-dlink" class="inp" placeholder="https://drive.google.com/..."/></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Access Code</label><input id="p-dcode" class="inp" placeholder="LICENSE-ABC123"/></div>
+      </div>
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Image URL</label><input id="p-img" class="inp" placeholder="https://..."/></div>
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Keywords (comma separated)</label><input id="p-kw" class="inp" placeholder="wig, hair, fashion, 24inch"/></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="document.getElementById('productModal').style.display='none'" class="btn-o" style="flex:1;">Cancel</button>
+      <button onclick="saveProduct()" class="btn-g" style="flex:1;" id="productSaveBtn">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMOTE MODAL -->
+<div id="promoteModal" style="display:none;" class="modal-bg" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3 style="font-size:1.1rem;font-weight:900;margin-bottom:4px;">✅ Promote to Knowledge Base</h3>
+    <p style="color:#64748B;font-size:.78rem;margin-bottom:16px;">Edit if needed, then promote. Future identical questions reply instantly from KB.</p>
+    <input type="hidden" id="promoteLogId"/>
+    <div style="display:grid;gap:10px;">
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Customer's message (becomes keyword)</label><input id="promoteKw" class="inp" readonly/></div>
+      <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Answer to save (edit if needed)</label><textarea id="promoteAns" class="inp" rows="4"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Category</label><select id="promoteCat" class="inp"><option value="general">General</option><option value="product">Product</option><option value="order">Order</option><option value="payment">Payment</option></select></div>
+        <div><label style="font-size:.73rem;color:#9CA3AF;display:block;margin-bottom:4px;">Language</label><select id="promoteLang" class="inp"><option value="en">English</option><option value="pidgin">Pidgin</option><option value="yo">Yoruba</option><option value="ig">Igbo</option><option value="ha">Hausa</option></select></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="document.getElementById('promoteModal').style.display='none'" class="btn-o" style="flex:1;">Cancel</button>
+      <button onclick="confirmPromote()" class="btn-g" style="flex:1;">✅ Promote to KB</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"><span id="toastIcon">✅</span><span id="toastMsg">Done!</span></div>
+
+<!-- ══════════ JAVASCRIPT ══════════ -->
+<script>
+const API = 'https://vendrai-api.onrender.com'; // ← YOUR RENDER URL
+const ADMIN_USERNAMES = ['mubaz','zapitapps','admin']; // ← ADD YOUR USERNAME(S) HERE
+
+let TOKEN = '', BIZ = {}, kbData = [], allTemplates = [];
+
+// ── INIT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  TOKEN = localStorage.getItem('vendrai_token');
+  if (!TOKEN) { window.location.href = 'login.html'; return; }
+  await loadUser();
+  loadOverview();
+  const params = new URLSearchParams(location.search);
+  if (params.get('upgraded') === '1') toast('🎉 Plan upgraded successfully!');
+});
+
+// ── LOAD USER ────────────────────────────────────────────────
+async function loadUser() {
+  try {
+    const d = await api('/auth/me');
+    if (!d.success) { logout(); return; }
+    BIZ = d.business;
+
+    // Sidebar user info
+    document.getElementById('sidebarUser').textContent = '@' + BIZ.username;
+    const planClass = {free:'plan-free',starter:'plan-starter',growth:'plan-growth',pro:'plan-pro'}[BIZ.plan]||'plan-free';
+    document.getElementById('sidebarPlan').innerHTML = `<span class="plan-badge ${planClass}">${BIZ.plan.toUpperCase()}${BIZ.isTrial?' • TRIAL':''}</span>`;
+    document.getElementById('welcomeMsg').textContent = `Welcome back, ${BIZ.businessName || BIZ.username}! 👋`;
+    document.getElementById('webhookUrl').value = `${API}/webhook/whatsapp`;
+    document.getElementById('broadLimit').textContent = BIZ.planLimits?.broadcast_limit || 0;
+
+    // Profile tab
+    document.getElementById('prof-username').textContent = BIZ.username || '';
+    document.getElementById('prof-email').textContent    = BIZ.email || '';
+    document.getElementById('prof-phone').textContent    = BIZ.phone || '';
+    document.getElementById('prof-plan').textContent     = BIZ.plan?.toUpperCase() + (BIZ.isTrial ? ' (Trial)' : '');
+    document.getElementById('prof-since').textContent    = new Date(BIZ.createdAt || Date.now()).toLocaleDateString();
+    document.getElementById('emailVerBadge').innerHTML   = BIZ.emailVerified ? '<span class="badge bg" style="margin-left:6px;">✓ Verified</span>' : '<span class="badge by" style="margin-left:6px;">⚠ Unverified</span>';
+
+    // Trial banner
+    if (BIZ.isTrial && BIZ.trialEndsAt) {
+      const days = Math.ceil((new Date(BIZ.trialEndsAt) - new Date()) / 86400000);
+      if (days <= 7 && days > 0) {
+        const banner = document.getElementById('trialBanner');
+        banner.style.display = 'flex';
+        document.getElementById('trialDaysLeft').textContent = days;
+      }
+    }
+
+    // ADMIN PANEL — show if username is in admin list
+    if (ADMIN_USERNAMES.includes(BIZ.username)) {
+      document.getElementById('adminNavSection').style.display = 'block';
+    }
+
+    // Broadcast lock
+    if (!BIZ.planLimits?.broadcasts_enabled) {
+      document.getElementById('broadcastLock').style.display = 'block';
+      document.getElementById('broadcastForm').style.display = 'none';
+    }
+
+    // Settings prefill
+    if (BIZ.settings) {
+      const s = BIZ.settings;
+      const setChk = (id, val) => { const el = document.getElementById(id); if(el) el.checked = val !== false; };
+      setChk('set-autoreply', s.auto_reply);
+      setChk('set-ai', s.ai_enabled);
+      setChk('set-leads', s.collect_leads);
+      setChk('set-away', !!s.away_mode);
+      setChk('set-watermark', s.watermark);
+      if (s.wa_phone_id) document.getElementById('wa-phoneid').value = s.wa_phone_id;
+      if (s.greeting_msg) document.getElementById('bot-greeting').value = s.greeting_msg;
+      if (s.fallback_msg) document.getElementById('bot-fallback').value = s.fallback_msg;
+      if (s.custom_instructions) document.getElementById('bot-custom').value = s.custom_instructions;
+    }
+
+    // Setup prefill
+    if (BIZ.businessName) document.getElementById('biz-name').value = BIZ.businessName;
+    if (BIZ.city)         document.getElementById('biz-city').value = BIZ.city;
+    if (BIZ.state)        document.getElementById('biz-state').value = BIZ.state;
+    if (BIZ.contactPhone) document.getElementById('biz-cphone').value = BIZ.contactPhone;
+    if (BIZ.businessDesc) document.getElementById('biz-desc').value = BIZ.businessDesc;
+    if (BIZ.deliveryFee)  document.getElementById('biz-dfee').value = BIZ.deliveryFee;
+    if (BIZ.deliveryDays) document.getElementById('biz-ddays').value = BIZ.deliveryDays;
+    if (BIZ.deliveryAreas?.length) document.getElementById('biz-dareas').value = BIZ.deliveryAreas.join(', ');
+
+  } catch(e) { console.error(e); }
+}
+
+// ── API HELPER ───────────────────────────────────────────────
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: { 'Content-Type':'application/json', 'x-session-token': TOKEN } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
+
+function toast(msg, type='green') {
+  const icons = { green:'✅', yellow:'⚠️', red:'❌', blue:'ℹ️' };
+  document.getElementById('toastIcon').textContent = icons[type]||'✅';
+  document.getElementById('toastMsg').textContent  = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function show(name) {
+  document.querySelectorAll('[id^="sec-"]').forEach(s => s.style.display='none');
+  document.querySelectorAll('.slink').forEach(l => l.classList.remove('active'));
+  document.getElementById(`sec-${name}`).style.display = '';
+  document.getElementById(`nav-${name}`)?.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+  const loaders = { overview:'loadOverview', kb:'loadKB', ailog:'loadAILogs', products:'loadProducts', orders:'loadOrders', contacts:'loadContacts', referral:'loadReferrals', templates:'loadTemplates', admin:'loadAdminPanel' };
+  if (loaders[name]) window[loaders[name]]?.();
+}
+
+// ── OVERVIEW ─────────────────────────────────────────────────
+async function loadOverview() {
+  try {
+    const d = await api('/dashboard/stats');
+    if (!d.success) return;
+    const s = d.stats;
+    document.getElementById('s-contacts').textContent = s.total_contacts || 0;
+    document.getElementById('s-orders').textContent   = s.total_orders || 0;
+    document.getElementById('s-revenue').textContent  = '₦' + Number(s.total_revenue||0).toLocaleString();
+    document.getElementById('s-products').textContent = s.total_products || 0;
+    document.getElementById('s-kbhits').textContent   = s.kb_hits || 0;
+    document.getElementById('s-aicalls').textContent  = (s.total_ai_calls||0) - (s.kb_hits||0);
+    document.getElementById('aiPending').textContent  = `${(s.total_ai_calls||0)-(s.kb_hits||0)} to review`;
+
+    const used = s.reply_count||0, limit = s.reply_limit||100;
+    const pct  = Math.min(100, Math.round(used/limit*100));
+    document.getElementById('usageBar').style.width = pct+'%';
+    document.getElementById('usagePct').textContent  = pct+'%';
+    document.getElementById('usageLow').textContent  = `${used} used`;
+    document.getElementById('usageHigh').textContent = `${limit} limit`;
+
+    // Setup progress
+    const od = await api('/onboarding/status');
+    if (od.success) {
+      const labels = { account_created:'Account Created', email_verified:'Email Verified', business_info:'Business Info Added', whatsapp_connected:'WhatsApp Connected', products_added:'Products Added', bot_customized:'Bot Customized' };
+      document.getElementById('progressSteps').innerHTML = Object.entries(od.steps).map(([k,v]) =>
+        `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:1rem;">${v?'✅':'⬜'}</span>
+          <span style="font-size:.82rem;color:${v?'#E2E8F0':'#64748B'};">${labels[k]||k}</span>
+        </div>`
+      ).join('');
+      if (od.percent >= 100) document.getElementById('setupProgressCard').style.display = 'none';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ── SETUP WIZARD ─────────────────────────────────────────────
+function wStep(n) {
+  [1,2,3].forEach(i => document.getElementById(`wstep-${i}`).style.display = i===n?'':'none');
+}
+
+async function saveBusinessInfo() {
+  const payload = {
+    businessName:     document.getElementById('biz-name').value.trim(),
+    businessDesc:     document.getElementById('biz-desc').value.trim(),
+    businessCategory: document.getElementById('biz-cat').value,
+    contactPhone:     document.getElementById('biz-cphone').value.trim(),
+    city:             document.getElementById('biz-city').value.trim(),
+    state:            document.getElementById('biz-state').value.trim(),
+    deliveryAreas:    document.getElementById('biz-dareas').value.split(',').map(s=>s.trim()).filter(Boolean),
+    deliveryFee:      parseFloat(document.getElementById('biz-dfee').value)||0,
+    deliveryDays:     document.getElementById('biz-ddays').value.trim(),
+  };
+  if (!payload.businessName) { toast('Business name is required', 'yellow'); return; }
+  const d = await api('/onboarding/business-info','POST',payload);
+  if (d.success) { toast('✅ Business info saved!'); wStep(2); }
+  else toast('Error: '+d.error,'red');
+}
+
+async function saveWhatsApp() {
+  const payload = { waPhoneId: document.getElementById('wa-phoneid').value.trim(), waAccessToken: document.getElementById('wa-token').value.trim(), paystackPublic: document.getElementById('ps-pub').value.trim(), paystackSecret: document.getElementById('ps-sec').value.trim() };
+  if (!payload.waPhoneId || !payload.waAccessToken) { toast('WhatsApp Phone ID and Token required','yellow'); return; }
+  const d = await api('/onboarding/whatsapp','POST',payload);
+  if (d.success) { toast('✅ WhatsApp connected!'); wStep(3); }
+  else toast('Error: '+d.error,'red');
+}
+
+async function saveBotMessages() {
+  const payload = { greetingMsg: document.getElementById('bot-greeting').value.trim(), fallbackMsg: document.getElementById('bot-fallback').value.trim(), aiPersonality: document.getElementById('bot-personality').value, customInstructions: document.getElementById('bot-custom').value.trim(), businessHoursStart: document.getElementById('bot-start').value, businessHoursEnd: document.getElementById('bot-end').value };
+  const d = await api('/onboarding/bot-messages','POST',payload);
+  if (d.success) toast('✅ Bot settings saved!');
+  else toast('Error: '+d.error,'red');
+}
+
+// ── BUSINESS TEMPLATES ───────────────────────────────────────
+async function loadTemplates() {
+  const grid = document.getElementById('templateGrid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div>Loading 100 templates...</div>';
+  try {
+    const d = await api('/templates');
+    allTemplates = d.templates || [];
+    renderTemplates(allTemplates);
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#F87171;font-size:.83rem;">Failed to load templates. Check your internet connection.</div>';
+  }
+}
+
+function filterTemplates() {
+  const q   = document.getElementById('tplSearch').value.toLowerCase();
+  const cat = document.getElementById('tplCat').value;
+  const filtered = allTemplates.filter(t =>
+    (!q || t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)) &&
+    (!cat || t.category === cat)
+  );
+  renderTemplates(filtered);
+}
+
+function renderTemplates(templates) {
+  const grid = document.getElementById('templateGrid');
+  if (!templates.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:30px;color:#64748B;font-size:.83rem;">No templates found. Try a different search.</div>'; return; }
+  grid.innerHTML = templates.map(t => `
+    <div class="card" style="cursor:pointer;transition:all .2s;" onmouseenter="this.style.borderColor='rgba(37,211,102,.4)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="applyTemplate('${t.code}','${esc(t.name)}')">
+      <div style="font-size:1.8rem;margin-bottom:8px;">${t.icon||'🏪'}</div>
+      <div style="font-weight:700;font-size:.83rem;margin-bottom:4px;">${esc(t.name)}</div>
+      <div style="font-size:.72rem;color:#64748B;margin-bottom:8px;">${esc(t.description||'')}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="badge bgr">${t.category}</span>
+        <span class="badge ${t.delivery_type==='digital'?'bb':'bg'}">${t.delivery_type==='digital'?'⚡ Digital':'📦 Physical'}</span>
+      </div>
+      <button style="margin-top:10px;width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:7px;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;">Apply This Template →</button>
+    </div>`).join('');
+}
+
+async function applyTemplate(code, name) {
+  if (!confirm(`Apply "${name}" template?\n\nThis will:\n✅ Add sample products\n✅ Load bot reply scripts\n✅ Configure delivery settings\n\nYou can edit everything after.`)) return;
+  toast('⏳ Applying template...','blue');
+  const d = await api('/onboarding/apply-template','POST',{ templateCode: code });
+  if (d.success) {
+    toast(`✅ "${name}" applied! ${d.productsAdded} products + ${d.kbEntriesAdded} KB entries added.`);
+    setTimeout(() => { show('products'); }, 1500);
+  } else toast('Error: '+d.error,'red');
+}
+
+// ── PRODUCTS ─────────────────────────────────────────────────
+async function loadProducts() {
+  const el = document.getElementById('productsList');
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div>';
+  try {
+    const d = await api('/api/products');
+    const products = d.products || [];
+    if (!products.length) {
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:#64748B;">
+        <div style="font-size:2rem;margin-bottom:10px;">🛍️</div>
+        <div style="font-weight:700;margin-bottom:6px;">No products yet</div>
+        <div style="font-size:.8rem;margin-bottom:16px;">Add products manually or pick a business template to auto-load them.</div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button onclick="openAddProduct()" class="btn-g" style="font-size:.78rem;">+ Add Product</button>
+          <button onclick="show('templates')" class="btn-o" style="font-size:.78rem;">🏪 Browse Templates</button>
+        </div>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `<div style="display:grid;gap:10px;">${products.map(p => `
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+              <span style="font-weight:700;font-size:.88rem;">${esc(p.name)}</span>
+              ${p.sku?`<span class="badge bgr">${esc(p.sku)}</span>`:''}
+              <span class="badge ${p.type==='digital'?'bb':'bg'}">${p.type==='digital'?'⚡ Digital':'📦 Physical'}</span>
+              <span class="badge ${p.is_active?'bg':'bgr'}">${p.is_active?'Active':'Inactive'}</span>
+              ${p.sale_price?'<span class="badge br">🔥 Sale</span>':''}
+            </div>
+            <div style="font-size:.82rem;color:#94A3B8;">
+              ${p.sale_price?`<span style="text-decoration:line-through;color:#4B5563;">${p.currency} ${Number(p.price).toLocaleString()}</span> <span style="color:#25D366;font-weight:700;">${p.currency} ${Number(p.sale_price).toLocaleString()}</span>`:
+              `${p.currency} ${Number(p.price).toLocaleString()}`}
+              ${p.description?' · '+esc(p.description).substring(0,60):''}
+            </div>
+            <div style="font-size:.73rem;color:#4B5563;margin-top:4px;">${p.stock!==null?`Stock: ${p.stock}`:'Unlimited stock'}${p.category?' · '+p.category:''}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">
+            <button onclick="openEditProduct(${JSON.stringify(p).replace(/"/g,'&quot;')})" class="btn-b" style="font-size:.72rem;">✏️ Edit</button>
+            <button onclick="toggleProduct('${p.id}',${!p.is_active})" class="btn-o" style="font-size:.72rem;">${p.is_active?'Disable':'Enable'}</button>
+            <button onclick="deleteProduct('${p.id}')" class="btn-r" style="font-size:.72rem;">Delete</button>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+  } catch(e) { el.innerHTML = '<div style="padding:20px;color:#F87171;font-size:.83rem;">Failed to load products.</div>'; }
+}
+
+function openAddProduct() {
+  document.getElementById('productModalTitle').textContent = 'Add Product';
+  document.getElementById('productSaveBtn').textContent = 'Add Product';
+  document.getElementById('p-edit-id').value = '';
+  ['p-name','p-sku','p-cat','p-desc','p-img','p-kw','p-dlink','p-dcode'].forEach(id => document.getElementById(id).value = '');
+  ['p-price','p-saleprice','p-stock'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-curr').value = 'NGN';
+  document.getElementById('p-type').value = 'physical';
+  document.getElementById('digitalFields').style.display = 'none';
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function openEditProduct(product) {
+  // FIX #4: Product edit function
+  document.getElementById('productModalTitle').textContent = 'Edit Product';
+  document.getElementById('productSaveBtn').textContent = 'Save Changes';
+  document.getElementById('p-edit-id').value = product.id;
+  document.getElementById('p-name').value     = product.name || '';
+  document.getElementById('p-sku').value      = product.sku || '';
+  document.getElementById('p-cat').value      = product.category || '';
+  document.getElementById('p-price').value    = product.price || '';
+  document.getElementById('p-saleprice').value= product.sale_price || '';
+  document.getElementById('p-curr').value     = product.currency || 'NGN';
+  document.getElementById('p-type').value     = product.type || 'physical';
+  document.getElementById('p-stock').value    = product.stock !== null ? product.stock : '';
+  document.getElementById('p-desc').value     = product.description || '';
+  document.getElementById('p-dlink').value    = product.digital_link || '';
+  document.getElementById('p-dcode').value    = product.digital_code || '';
+  document.getElementById('p-img').value      = product.image_url || '';
+  document.getElementById('p-kw').value       = (product.keywords||[]).join(', ');
+  toggleDigitalFields(product.type);
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function toggleDigitalFields(type) {
+  document.getElementById('digitalFields').style.display = type === 'digital' ? 'grid' : 'none';
+}
+
+async function saveProduct() {
+  const editId = document.getElementById('p-edit-id').value;
+  const name   = document.getElementById('p-name').value.trim();
+  const price  = document.getElementById('p-price').value;
+  if (!name || !price) { toast('Name and price are required','yellow'); return; }
+
+  const payload = {
+    name, price: parseFloat(price),
+    sku:         document.getElementById('p-sku').value.trim()||null,
+    category:    document.getElementById('p-cat').value.trim()||'general',
+    salePrice:   document.getElementById('p-saleprice').value||null,
+    currency:    document.getElementById('p-curr').value,
+    type:        document.getElementById('p-type').value,
+    stock:       document.getElementById('p-stock').value||null,
+    description: document.getElementById('p-desc').value.trim()||null,
+    digitalLink: document.getElementById('p-dlink').value.trim()||null,
+    digitalCode: document.getElementById('p-dcode').value.trim()||null,
+    imageUrl:    document.getElementById('p-img').value.trim()||null,
+    keywords:    document.getElementById('p-kw').value.split(',').map(k=>k.trim()).filter(Boolean),
+  };
+
+  let d;
+  if (editId) {
+    // EDIT existing product
+    d = await api(`/api/products/${editId}`,'PATCH', payload);
+  } else {
+    // ADD new product
+    d = await api('/api/products','POST', payload);
+  }
+
+  if (d.success) {
+    document.getElementById('productModal').style.display = 'none';
+    toast(editId ? '✅ Product updated!' : '✅ Product added!');
+    loadProducts();
+  } else toast('Error: '+d.error,'red');
+}
+
+async function toggleProduct(id, active) {
+  const d = await api(`/api/products/${id}`,'PATCH',{ is_active: active });
+  if (d.success) { toast('Updated ✅'); loadProducts(); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  const d = await api(`/api/products/${id}`,'DELETE');
+  if (d.success) { toast('Product deleted'); loadProducts(); }
+  else toast('Error: '+d.error,'red');
+}
+
+// ── ORDERS ───────────────────────────────────────────────────
+async function loadOrders(status) {
+  const el = document.getElementById('ordersTable');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div>';
+  try {
+    const url = status && status !== 'all' ? `/dashboard/orders?status=${status}` : '/dashboard/orders';
+    const d   = await api(url);
+    const orders = d.orders || [];
+    if (!orders.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:#64748B;font-size:.83rem;">No orders yet. Orders appear here when customers buy via WhatsApp!</div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Order No</th><th>Customer</th><th>Total</th><th>Status</th><th>Payment</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody>${orders.map(o=>`<tr>
+        <td style="font-family:monospace;font-size:.75rem;">${esc(o.order_number)}</td>
+        <td>${esc(o.contacts?.name||'—')}<br/><span style="font-size:.72rem;color:#64748B;">${esc(o.contacts?.phone||'')}</span></td>
+        <td style="font-weight:700;">${o.currency} ${Number(o.total).toLocaleString()}</td>
+        <td><span class="badge ${{'pending':'by','paid':'bg','shipped':'bb','delivered':'bg','cancelled':'br'}[o.status]||'bgr'}">${o.status}</span></td>
+        <td><span class="badge ${o.paystack_status==='success'?'bg':'by'}">${o.paystack_status||'pending'}</span></td>
+        <td style="font-size:.75rem;color:#64748B;">${new Date(o.created_at).toLocaleDateString()}</td>
+        <td><select onchange="updateOrder('${o.id}',this.value)" class="inp" style="font-size:.72rem;width:120px;padding:5px;">
+          ${['pending','confirmed','paid','processing','shipped','delivered','cancelled'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+      </tr>`).join('')}</tbody></table>
+      <div style="padding:12px 14px;font-size:.73rem;color:#64748B;">Showing ${orders.length} orders</div>`;
+  } catch(e) { el.innerHTML = '<div style="padding:20px;color:#F87171;font-size:.83rem;">Failed to load orders.</div>'; }
+}
+
+async function updateOrder(id, status) {
+  const d = await api(`/dashboard/orders/${id}`,'PATCH',{status});
+  if (d.success) toast(`Order updated to "${status}" ✅`);
+  else toast('Update failed','red');
+}
+
+// ── CONTACTS ─────────────────────────────────────────────────
+async function loadContacts() {
+  const el = document.getElementById('contactsTable');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div>';
+  try {
+    const search = document.getElementById('contactSearch')?.value||'';
+    const url    = search ? `/dashboard/contacts?search=${encodeURIComponent(search)}` : '/dashboard/contacts';
+    const d      = await api(url);
+    const contacts = d.contacts || [];
+    if (!contacts.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:#64748B;font-size:.83rem;">No contacts yet. They appear automatically when customers message your bot!</div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Name</th><th>Phone</th><th>Language</th><th>Orders</th><th>Spent</th><th>Last Seen</th></tr></thead>
+      <tbody>${contacts.map(c=>`<tr>
+        <td>${esc(c.name||'—')}</td>
+        <td style="font-family:monospace;font-size:.75rem;">${c.phone}</td>
+        <td><span class="badge bb">${c.language||'en'}</span></td>
+        <td>${c.total_orders}</td>
+        <td>₦${Number(c.total_spent||0).toLocaleString()}</td>
+        <td style="font-size:.75rem;color:#64748B;">${new Date(c.last_seen).toLocaleDateString()}</td>
+      </tr>`).join('')}</tbody></table>
+      <div style="padding:12px 14px;font-size:.73rem;color:#64748B;">Showing ${contacts.length} of ${d.total||contacts.length}</div>`;
+  } catch(e) { el.innerHTML = '<div style="padding:20px;color:#F87171;font-size:.83rem;">Failed to load contacts.</div>'; }
+}
+
+// ── KNOWLEDGE BASE ────────────────────────────────────────────
+async function loadKB() {
+  const el = document.getElementById('kbEntries');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div>';
+  try {
+    const d = await api('/dashboard/kb');
+    kbData = d.entries || [];
+    renderKB(kbData);
+  } catch(e) { el.innerHTML = '<div style="color:#F87171;font-size:.83rem;">Failed to load KB.</div>'; }
+}
+
+function renderKB(entries) {
+  const el = document.getElementById('kbEntries');
+  if (!entries.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:#64748B;font-size:.83rem;">No KB entries yet. Add your first one or apply a business template!</div>'; return; }
+  el.innerHTML = entries.map(e=>`
+    <div class="card" style="${!e.is_active?'opacity:.5':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="font-weight:700;font-size:.83rem;">${esc(e.keyword).substring(0,60)}</span>
+            <span class="badge ${e.is_active?'bg':'bgr'}">${e.is_active?'Active':'Off'}</span>
+            <span class="badge bb">${e.category||'general'}</span>
+            <span class="badge bgr">${e.language||'en'}</span>
+            ${e.promoted_from_ai?'<span class="badge by">AI Promoted</span>':''}
+          </div>
+          <div style="font-size:.8rem;color:#94A3B8;">${esc(e.answer).substring(0,120)}${e.answer.length>120?'...':''}</div>
+          <div style="font-size:.72rem;color:#4B5563;margin-top:4px;">Used ${e.uses} times</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="toggleKB('${e.id}')" class="btn-o" style="font-size:.72rem;">${e.is_active?'Disable':'Enable'}</button>
+          <button onclick="deleteKB('${e.id}')" class="btn-r" style="font-size:.72rem;">Delete</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterKB() {
+  const q = document.getElementById('kbSearch').value.toLowerCase();
+  renderKB(kbData.filter(e => e.keyword.toLowerCase().includes(q)||e.answer.toLowerCase().includes(q)));
+}
+
+async function addKB() {
+  const keyword = document.getElementById('kb-kw').value.trim();
+  const answer  = document.getElementById('kb-ans').value.trim();
+  if (!keyword||!answer) { toast('Keyword and answer required','yellow'); return; }
+  const d = await api('/dashboard/kb','POST',{ keyword, answer, category: document.getElementById('kb-cat').value, language: document.getElementById('kb-lang').value });
+  if (d.success) { document.getElementById('addKbModal').style.display='none'; toast('KB entry added! ✅'); document.getElementById('kb-kw').value=''; document.getElementById('kb-ans').value=''; loadKB(); }
+  else toast('Error: '+d.error,'red');
+}
+
+async function toggleKB(id) {
+  const d = await api(`/dashboard/kb/${id}/toggle`,'PATCH');
+  if (d.success) { toast('Updated ✅'); loadKB(); }
+}
+
+async function deleteKB(id) {
+  if (!confirm('Delete this KB entry?')) return;
+  await api(`/dashboard/kb/${id}`,'DELETE');
+  toast('Deleted'); loadKB();
+}
+
+// ── AI LOGS ───────────────────────────────────────────────────
+async function loadAILogs() {
+  const el = document.getElementById('aiLogEntries');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:#64748B;"><div class="spinner" style="margin:0 auto 10px;"></div></div>';
+  try {
+    const d = await api('/dashboard/ai-logs');
+    const candidates = d.candidates||[];
+    if (!candidates.length) { el.innerHTML = '<div style="text-align:center;padding:30px;color:#64748B;font-size:.83rem;">No AI candidates yet. They appear as customers message your bot and AI responds!</div>'; return; }
+    el.innerHTML = candidates.map(c=>`
+      <div class="card">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+              <span class="badge by">Pending</span>
+              <span class="badge bb">Asked ${c.frequency||1}x</span>
+              <span style="font-size:.72rem;color:#64748B;">${new Date(c.created_at).toLocaleDateString()}</span>
+            </div>
+            <div style="font-size:.82rem;font-weight:600;margin-bottom:4px;">Customer asked: <span style="color:#25D366;">"${esc(c.incoming_msg)}"</span></div>
+            <div style="font-size:.8rem;color:#94A3B8;">${esc(c.ai_response||'').substring(0,180)}...</div>
+          </div>
+          <button onclick="openPromote('${c.id}','${(c.incoming_msg||'').replace(/'/g,"\\'").replace(/\n/g,' ')}','${(c.ai_response||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')" class="btn-g" style="font-size:.75rem;white-space:nowrap;">✅ Promote to KB</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { el.innerHTML = '<div style="color:#F87171;font-size:.83rem;">Failed to load AI logs.</div>'; }
+}
+
+function openPromote(id,kw,ans) {
+  document.getElementById('promoteLogId').value = id;
+  document.getElementById('promoteKw').value    = kw;
+  document.getElementById('promoteAns').value   = ans;
+  document.getElementById('promoteModal').style.display = 'flex';
+}
+
+async function confirmPromote() {
+  const d = await api(`/dashboard/ai-logs/${document.getElementById('promoteLogId').value}/promote`,'POST',{ customAnswer: document.getElementById('promoteAns').value, category: document.getElementById('promoteCat').value, language: document.getElementById('promoteLang').value });
+  if (d.success) { document.getElementById('promoteModal').style.display='none'; toast('🎉 Promoted to KB!'); loadAILogs(); }
+  else toast('Error: '+d.error,'red');
+}
+
+async function autoPromoteAll() {
+  if (!confirm('Auto-promote all high-confidence AI responses to KB?')) return;
+  toast('⏳ Auto-promoting...','blue');
+  // Call promote on each candidate
+  const d = await api('/dashboard/ai-logs');
+  const candidates = d.candidates || [];
+  let promoted = 0;
+  for (const c of candidates) {
+    const r = await api(`/dashboard/ai-logs/${c.id}/promote`,'POST',{ customAnswer: c.ai_response, category:'general', language:'en' });
+    if (r.success) promoted++;
+  }
+  toast(`⚡ Auto-promoted ${promoted} entries to KB!`);
+  loadAILogs();
+}
+
+// ── BROADCAST ─────────────────────────────────────────────────
+async function sendBroadcast() {
+  const msg = document.getElementById('broad-msg').value.trim();
+  if (!msg) { toast('Message is required','yellow'); return; }
+  const tags = document.getElementById('broad-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const d = await api('/dashboard/broadcasts/send','POST',{ title: document.getElementById('broad-title').value.trim()||'Broadcast', message: msg, targetTags: tags });
+  const el = document.getElementById('broadResult');
+  el.style.display = 'block';
+  if (d.success) { el.textContent = `✅ ${d.queued} messages queued! ~${d.estimatedSeconds}s to send all.`; toast(`Broadcast queued! 🎉`); }
+  else { el.textContent = '⚠️ Error: ' + d.error; toast('Broadcast failed','red'); }
+}
+
+// ── REFERRALS ─────────────────────────────────────────────────
+async function loadReferrals() {
+  try {
+    const d = await api('/dashboard/referrals');
+    if (d.success) {
+      document.getElementById('refCode').textContent   = d.referralCode||'—';
+      document.getElementById('refLink').value         = d.referralLink||'';
+      document.getElementById('totalRefs').textContent = d.totalReferrals||0;
+      document.getElementById('convRefs').textContent  = (d.referrals||[]).filter(r=>r.status==='converted').length;
+    }
+  } catch(e) {}
+}
+
+function copyRef() { navigator.clipboard.writeText(document.getElementById('refLink').value).then(()=>toast('Referral link copied! 🚀')); }
+function copyWebhook() { navigator.clipboard.writeText(document.getElementById('webhookUrl').value).then(()=>toast('Webhook URL copied! ✅')); }
+
+// ── SETTINGS ─────────────────────────────────────────────────
+async function saveSetting(key, value) {
+  const d = await api('/dashboard/settings','PATCH',{ [key]: value });
+  if (d.success) toast(`${key} saved ✅`);
+  else toast('Error: '+d.error,'red');
+}
+
+// ── PROFILE ───────────────────────────────────────────────────
+async function changePassword() {
+  const cur = document.getElementById('pw-current').value;
+  const nw  = document.getElementById('pw-new').value;
+  const cnf = document.getElementById('pw-confirm').value;
+  if (!cur||!nw) { toast('All fields required','yellow'); return; }
+  if (nw!==cnf)  { toast('New passwords do not match','yellow'); return; }
+  if (nw.length<8) { toast('Password must be at least 8 characters','yellow'); return; }
+  const d = await api('/auth/change-password','PATCH',{ currentPassword:cur, newPassword:nw });
+  if (d.success) { toast('✅ Password changed!'); ['pw-current','pw-new','pw-confirm'].forEach(id=>document.getElementById(id).value=''); }
+  else toast('Error: '+d.error,'red');
+}
+
+// ── ADMIN PANEL ───────────────────────────────────────────────
+let ADMIN_CONTEXT = { role:'viewer', permissions:[] };
+
+function adminCan(permission) {
+  return (ADMIN_CONTEXT.permissions || []).includes(permission);
+}
+
+function loadAdminPanel() {
+  loadAdminMe();
+  loadPlatformStats();
+  loadAllSubscribers();
+  loadStaffRoles();
+}
+
+async function loadAdminMe() {
+  try {
+    const d = await api('/admin/me');
+    if (d.success) {
+      ADMIN_CONTEXT = { role:d.role, permissions:d.permissions || [] };
+      const hdr = document.querySelector('#sec-admin .admin-header p');
+      if (hdr) hdr.textContent = `Logged in as ${d.username} — role: ${d.role.toUpperCase()}. Permissions: ${(d.permissions||[]).join(', ')}`;
+    }
+  } catch(e) {}
+}
+
+async function adminSetPlan(plan) {
+  const res = await fetch(`${API}/admin/set-plan`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'x-session-token': TOKEN },
+    body: JSON.stringify({ plan, businessId: BIZ.id })
+  });
+  const data = await res.json();
+  if (data.success) {
+    const el = document.getElementById('planSwitchResult');
+    el.style.display = 'block';
+    el.textContent = `✅ Plan switched to "${plan.toUpperCase()}" for testing! Refresh page to see updated features.`;
+    toast(`Plan set to ${plan.toUpperCase()} ✅`);
+  } else {
+    toast(data.error || `Could not set plan`,'red');
+  }
+}
+
+async function loadAllSubscribers() {
+  const el = document.getElementById('subscribersList');
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:#64748B;font-size:.8rem;"><div class="spinner" style="margin:0 auto 8px;"></div>Loading subscribers...</div>';
+  try {
+    const d = await api('/admin/all-businesses');
+    if (d.admin) ADMIN_CONTEXT = d.admin;
+    const businesses = d.businesses || [];
+    if (!businesses.length) { el.innerHTML = '<div style="text-align:center;padding:16px;color:#64748B;font-size:.8rem;">No subscribers yet.</div>'; return; }
+    el.innerHTML = `<div style="overflow-x:auto;"><table style="font-size:.74rem;min-width:1180px;"><thead><tr><th>Username</th><th>Business</th><th>Email</th><th>Phone</th><th>Plan</th><th>Replies</th><th>Orders</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+      <tbody>${businesses.map(b=>{
+        const disabled = b.is_active === false || b.is_suspended === true;
+        const status = disabled ? '<span class="badge br">Disabled</span>' : '<span class="badge bg">Active</span>';
+        const phone = b.contact_phone || b.phone || '';
+        const planSelect = `<select onchange="adminSetSubscriberPlan('${b.id}',this.value)" class="inp" style="font-size:.7rem;padding:5px;min-width:82px;"><option value="free" ${b.plan==='free'?'selected':''}>free</option><option value="starter" ${b.plan==='starter'?'selected':''}>starter</option><option value="growth" ${b.plan==='growth'?'selected':''}>growth</option><option value="pro" ${b.plan==='pro'?'selected':''}>pro</option></select>`;
+        return `<tr>
+          <td style="font-weight:600;">@${esc(b.username)}</td>
+          <td>${esc(b.business_name || '—')}</td>
+          <td style="color:#93C5FD;">${esc(b.email || '—')}</td>
+          <td>${esc(phone || '—')}</td>
+          <td>${planSelect}</td>
+          <td>${b.reply_count||0}/${b.reply_limit||100}</td>
+          <td>${b.total_orders||0}</td>
+          <td>${status}</td>
+          <td style="color:#64748B;">${b.created_at ? new Date(b.created_at).toLocaleDateString() : '—'}</td>
+          <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button onclick="toggleSubscriber('${b.id}',${disabled})" class="${disabled?'btn-g':'btn-o'}" style="font-size:.68rem;padding:5px 8px;">${disabled?'Enable':'Disable'}</button>
+            <button onclick="deleteSubscriber('${b.id}','${esc(String(b.username||'')).replace(/'/g,'&#39;')}')" style="background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);padding:5px 8px;border-radius:7px;font-size:.68rem;cursor:pointer;">Delete</button>
+          </div></td>
+        </tr>`;
+      }).join('')}</tbody></table></div>
+      <div style="padding:10px;font-size:.73rem;color:#64748B;">${businesses.length} total subscribers. Disable stops login and bot routing. Delete is permanent.</div>`;
+  } catch(e) { el.innerHTML = `<div style="padding:16px;color:#FCA5A5;font-size:.8rem;">Could not load subscribers: ${esc(e.message)}</div>`; }
+}
+
+async function adminSetSubscriberPlan(businessId, plan) {
+  if (!confirm(`Change this subscriber to ${plan.toUpperCase()} plan?`)) { loadAllSubscribers(); return; }
+  const d = await api('/admin/set-plan','POST',{ businessId, plan });
+  if (d.success) { toast('✅ Subscriber plan updated'); loadAllSubscribers(); }
+  else { toast(d.error || 'Could not update plan','red'); loadAllSubscribers(); }
+}
+
+async function toggleSubscriber(businessId, currentlyDisabled) {
+  const action = currentlyDisabled ? 'enable' : 'disable';
+  let reason = '';
+  if (!currentlyDisabled) reason = prompt('Why are you disabling this subscriber? This is saved for admin records.', 'Disabled by VendrAI admin') || 'Disabled by VendrAI admin';
+  if (!confirm(`Are you sure you want to ${action} this subscriber?`)) return;
+  const d = await api(`/admin/businesses/${businessId}/status`,'PATCH',{
+    active: currentlyDisabled,
+    suspended: !currentlyDisabled,
+    reason: currentlyDisabled ? '' : reason,
+  });
+  if (d.success) { toast(`✅ Subscriber ${action}d`); loadAllSubscribers(); }
+  else toast(d.error || `Could not ${action}`,'red');
+}
+
+async function deleteSubscriber(businessId, username) {
+  const typed = prompt(`PERMANENT DELETE\n\nThis deletes @${username}, sessions, products, KB, contacts, orders and settings.\n\nType DELETE to continue.`);
+  if (typed !== 'DELETE') { toast('Delete cancelled','yellow'); return; }
+  const d = await api(`/admin/businesses/${businessId}`,'DELETE');
+  if (d.success) { toast(d.message || 'Subscriber deleted'); loadAllSubscribers(); loadPlatformStats(); }
+  else toast(d.error || 'Delete failed','red');
+}
+
+async function loadPlatformStats() {
+  try {
+    const d = await api('/admin/platform-stats');
+    if (d.success) {
+      document.getElementById('stat-total-biz').textContent    = d.stats.total_businesses || '—';
+      const activeEl = document.getElementById('stat-active-biz');
+      if (activeEl) activeEl.textContent = d.stats.active_businesses || '—';
+      document.getElementById('stat-total-orders').textContent = d.stats.total_orders || '—';
+      document.getElementById('stat-total-rev').textContent    = d.stats.total_revenue ? '₦'+Number(d.stats.total_revenue).toLocaleString() : '—';
+    }
+  } catch(e) {
+    document.getElementById('stat-total-biz').textContent    = '—';
+    const activeEl = document.getElementById('stat-active-biz');
+    if (activeEl) activeEl.textContent = '—';
+    document.getElementById('stat-total-orders').textContent = '—';
+    document.getElementById('stat-total-rev').textContent    = '—';
+  }
+}
+
+async function loadStaffRoles() {
+  const el = document.getElementById('staffRolesList');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:#64748B;font-size:.8rem;">Loading staff...</div>';
+  try {
+    const d = await api('/admin/staff');
+    const staff = d.staff || [];
+    const setup = d.setupNeeded ? `<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px;margin-bottom:10px;color:#FCD34D;font-size:.76rem;">⚠️ Staff database table is not installed yet. Run <b>admin_staff_roles.sql</b> in Supabase to add dashboard-managed staff roles. Render env admins still work.</div>` : '';
+    if (!staff.length) { el.innerHTML = setup + '<div style="text-align:center;padding:16px;color:#64748B;font-size:.8rem;">No staff yet.</div>'; return; }
+    el.innerHTML = setup + `<div style="overflow-x:auto;"><table style="font-size:.74rem;"><thead><tr><th>Username</th><th>Role</th><th>Source</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead><tbody>${staff.map(s=>{
+      const envLocked = s.source === 'Render env';
+      const roleSelect = envLocked ? `<span class="badge by">${esc(s.role)}</span>` : `<select onchange="updateStaffRole('${s.username}',this.value,null)" class="inp" style="font-size:.7rem;padding:5px;"><option value="viewer" ${s.role==='viewer'?'selected':''}>viewer</option><option value="support" ${s.role==='support'?'selected':''}>support</option><option value="manager" ${s.role==='manager'?'selected':''}>manager</option></select>`;
+      return `<tr><td style="font-weight:600;">@${esc(s.username)}</td><td>${roleSelect}</td><td>${esc(s.source||'Database')}</td><td>${s.is_active===false?'<span class="badge br">Off</span>':'<span class="badge bg">Active</span>'}</td><td>${esc(s.notes||'—')}</td><td>${envLocked?'<span style="color:#64748B;">Edit in Render</span>':`<button onclick="updateStaffRole('${s.username}',null,${s.is_active===false})" class="btn-o" style="font-size:.68rem;padding:5px 8px;">${s.is_active===false?'Enable':'Disable'}</button> <button onclick="removeStaffRole('${s.username}')" style="background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.25);padding:5px 8px;border-radius:7px;font-size:.68rem;cursor:pointer;">Remove</button>`}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  } catch(e) { el.innerHTML = `<div style="padding:16px;color:#FCA5A5;font-size:.8rem;">Could not load staff roles: ${esc(e.message)}</div>`; }
+}
+
+async function addStaffRole() {
+  const username = document.getElementById('staff-username').value.trim().replace('@','').toLowerCase();
+  const role = document.getElementById('staff-role').value;
+  const notes = document.getElementById('staff-notes').value.trim();
+  if (!username) { toast('Staff username required','yellow'); return; }
+  const d = await api('/admin/staff','POST',{ username, role, notes });
+  if (d.success) {
+    toast(d.message || 'Staff added');
+    document.getElementById('staff-username').value = '';
+    document.getElementById('staff-notes').value = '';
+    loadStaffRoles();
+  } else toast(d.error || 'Could not add staff','red');
+}
+
+async function updateStaffRole(username, role, enable) {
+  const body = {};
+  if (role) body.role = role;
+  if (enable !== null) body.isActive = enable;
+  const d = await api(`/admin/staff/${username}`,'PATCH',body);
+  if (d.success) { toast(d.message || 'Staff updated'); loadStaffRoles(); }
+  else { toast(d.error || 'Could not update staff','red'); loadStaffRoles(); }
+}
+
+async function removeStaffRole(username) {
+  if (!confirm(`Remove @${username} from VendrAI staff roles?`)) return;
+  const d = await api(`/admin/staff/${username}`,'DELETE');
+  if (d.success) { toast(d.message || 'Staff removed'); loadStaffRoles(); }
+  else toast(d.error || 'Could not remove staff','red');
+}
+
+async function sendTestMessage() {
+  const phone = document.getElementById('debug-phone').value.trim();
+  const msg   = document.getElementById('debug-msg').value.trim();
+  if (!phone||!msg) { toast('Phone and message required','yellow'); return; }
+  const el = document.getElementById('debugResult');
+  el.style.display = 'block';
+  el.textContent = '⏳ Sending...';
+  try {
+    const d = await api('/admin/test-message','POST',{ phone, message: msg });
+    el.textContent = d.success ? `✅ Sent! Message ID: ${d.messageId||'—'}` : `❌ Failed: ${d.error}`;
+  } catch(e) { el.textContent = '❌ Error: ' + e.message; }
+}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function logout() {
+  try { await api('/auth/logout','POST'); } catch(e) {}
+  localStorage.removeItem('vendrai_token');
+  localStorage.removeItem('vendrai_biz_id');
+  window.location.href = 'login.html';
+}
+
+async function logoutAll() {
+  if (!confirm('Log out from all devices?')) return;
+  try { await api('/auth/logout-all','POST'); } catch(e) {}
+  localStorage.removeItem('vendrai_token');
+  localStorage.removeItem('vendrai_biz_id');
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>
