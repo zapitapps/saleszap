@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VendrAI Dashboard</title>
+  <style>
+    :root { --bg:#0B0F1A; --card:#111827; --border:#1F2937; --accent:#25D366; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family: Inter, system-ui, sans-serif; background:var(--bg); color:#F8FAFC; display:flex; min-height:100vh; }
+    .sidebar { width:240px; background:#0F172A; border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; height:100%; }
+    .main { flex:1; margin-left:240px; padding:0; }
+    .slink { display:block; padding:10px 14px; margin:2px 8px; border-radius:8px; color:#CBD5E1; text-decoration:none; font-size:.92rem; cursor:pointer; }
+    .slink.active, .slink:hover { background:#1E2937; color:#fff; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:16px; }
+    .btn-g { background:linear-gradient(135deg,#25D366,#128C7E); color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:.8rem; cursor:pointer; text-decoration:none; display:inline-block; }
+    .btn-o { background:transparent; border:1px solid var(--border); color:#94A3B8; padding:8px 12px; border-radius:8px; font-size:.75rem; cursor:pointer; }
+    .pbar { height:6px; background:#1F2937; border-radius:99px; overflow:hidden; }
+    .pfill { height:100%; background:#25D366; transition:width .3s; }
+    .logout-btn { width:100%; background:#1F2937; border:1px solid #334155; color:#F87171; padding:8px; border-radius:8px; font-size:.8rem; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div style="padding:16px;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:32px;height:32px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🤖</div>
+      <span style="font-weight:900;font-size:1.1rem;">Vendr<span style="color:#25D366">AI</span></span>
+    </div>
+    <div id="sidebarUser" style="font-size:.75rem;color:#64748B;">Loading...</div>
+    <div id="sidebarPlan" style="margin-top:6px;"></div>
+  </div>
+
+  <nav style="padding:8px;flex:1;">
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;">Main</div>
+    <a onclick="show('overview')" class="slink active" id="nav-overview">📊 Overview</a>
+    <a onclick="show('setup')" class="slink" id="nav-setup">🚀 Setup Wizard</a>
+    <a onclick="show('products')" class="slink" id="nav-products">🛍️ Products</a>
+    <a onclick="show('orders')" class="slink" id="nav-orders">📦 Orders</a>
+    <a onclick="show('contacts')" class="slink" id="nav-contacts">👥 Contacts</a>
+    <a onclick="show('crm')" class="slink" id="nav-crm">💼 Sales Pipeline</a>
+    
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;margin-top:8px;">Bot</div>
+    <a onclick="show('kb')" class="slink" id="nav-kb">📚 Knowledge Base</a>
+    <a onclick="show('broadcast')" class="slink" id="nav-broadcast">📣 Broadcast</a>
+    
+    <div style="font-size:.65rem;color:#4B5563;font-weight:700;letter-spacing:.08em;padding:8px 6px 4px;text-transform:uppercase;margin-top:8px;">Account</div>
+    <a onclick="show('settings')" class="slink" id="nav-settings">⚙️ Settings</a>
+    <a onclick="show('settings');setTimeout(()=>document.getElementById('paymentMethodsCard')?.scrollIntoView({behavior:'smooth'}),120)" class="slink" id="nav-payments">💳 Payment Methods</a>
+  </nav>
+
+  <div style="padding:8px;border-top:1px solid var(--border);margin-top:auto;">
+    <a href="pricing.html" class="btn-g" style="display:block;text-align:center;font-size:.75rem;margin-bottom:8px;text-decoration:none;">⚡ Upgrade Plan</a>
+    <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main" style="padding:24px 28px;">
+
+  <!-- PILOT BANNER + NEW PRICING NOTICE (NEW) -->
+  <div id="pilotBanner" style="background:linear-gradient(90deg, rgba(37,211,102,.12), rgba(59,130,246,.08)); border:2px solid #25D366; border-radius:14px; padding:14px 18px; margin-bottom:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+    <div style="flex:1;">
+      <div style="font-weight:800; font-size:.88rem; color:#25D366;">🚀 EARLY PILOT PROGRAM — July 2026</div>
+      <div style="font-size:.8rem; color:#CBD5E1; margin-top:2px;">Thank you for testing! Your feedback is shaping the product for Nigerian SMEs.</div>
+    </div>
+    <a href="pricing.html" class="btn-g" style="font-size:.72rem; padding:7px 13px; text-decoration:none; white-space:nowrap;">See Realistic Pricing →</a>
+  </div>
+
+  <div style="background:rgba(59,130,246,.07); border:1px solid #3B82F6; border-radius:10px; padding:9px 13px; margin-bottom:18px; font-size:.81rem; color:#93C5FD;">
+    <strong>Updated July 2026:</strong> Starter now <strong>₦5,999/mo</strong> • Growth <strong>₦14,999/mo</strong>. Built for real Nigerian businesses.
+  </div>
+
+  <!-- OVERVIEW HEADER -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+    <div>
+      <h1 style="font-size:1.45rem;font-weight:900;">Dashboard Overview</h1>
+      <p id="welcomeMsg" style="color:#64748B;font-size:.82rem;margin-top:2px;">Welcome back!</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="loadOverview()" class="btn-o" style="font-size:.75rem;">🔄 Refresh</button>
+      <button onclick="show('broadcast')" class="btn-g" style="font-size:.75rem;">📣 Broadcast</button>
+    </div>
+  </div>
+
+  <!-- Trial Banner -->
+  <div id="trialBanner" style="display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:12px 16px;margin-bottom:18px;">
+    <div style="font-size:.82rem;color:#FCD34D;">
+      ⚠️ <strong>Free trial active.</strong> <span id="trialDaysLeft"></span> days left. 
+      <a href="pricing.html" style="color:#FCD34D;font-weight:700;margin-left:8px;">Upgrade now →</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">
+    <div class="card"><div style="color:#64748B;font-size:.7rem;">Contacts</div><div id="s-contacts" style="font-size:1.85rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.7rem;">Orders</div><div id="s-orders" style="font-size:1.85rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.7rem;">Revenue</div><div id="s-revenue" style="font-size:1.85rem;font-weight:900;color:#25D366;">—</div></div>
+    <div class="card"><div style="color:#64748B;font-size:.7rem;">Products</div><div id="s-products" style="font-size:1.85rem;font-weight:900;color:#25D366;">—</div></div>
+  </div>
+
+  <!-- Reply Usage -->
+  <div class="card" style="margin-bottom:18px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-weight:700;font-size:.88rem;">Monthly Reply Usage</span>
+      <span id="usagePct" style="color:#25D366;font-weight:700;font-size:.82rem;">0%</span>
+    </div>
+    <div class="pbar"><div class="pfill" id="usageBar" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#64748B;margin-top:5px;">
+      <span id="usageLow">0 used</span><span id="usageHigh">100 limit</span>
+    </div>
+  </div>
+
+  <!-- Quick Pilot CTA -->
+  <div class="card" style="background:rgba(37,211,102,.05);border:1px solid #25D366;">
+    <div style="font-weight:700;color:#25D366;margin-bottom:6px;">📍 Pilot User Tip</div>
+    <div style="font-size:.82rem;color:#CBD5E1;">
+      Test the bot by sending messages like “How much is the red wig?” or “I want to order 2”. 
+      Check your Orders section for new leads. We’re improving based on your feedback!
+    </div>
+  </div>
+
+  <!-- Other sections placeholders -->
+  <div class="card" style="margin-top:20px;">
+    <h3 style="margin-bottom:10px;">Quick Actions</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button onclick="show('products')" class="btn-g">➕ Add Products</button>
+      <button onclick="show('crm')" class="btn-g">View Sales Pipeline</button>
+      <a href="pricing.html" class="btn-g" style="text-decoration:none;">Upgrade Plan</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// Basic dashboard JS (simplified for pilot)
+function show(section) {
+  alert('In full version this would switch to: ' + section + ' section');
+  // In real file this would hide/show sections
+}
+
+function loadOverview() {
+  // Mock data for pilot
+  document.getElementById('s-contacts').innerText = '142';
+  document.getElementById('s-orders').innerText = '38';
+  document.getElementById('s-revenue').innerText = '₦187k';
+  document.getElementById('s-products').innerText = '24';
+  document.getElementById('usagePct').innerText = '34%';
+  document.getElementById('usageBar').style.width = '34%';
+  document.getElementById('usageLow').innerText = '340 used';
+  document.getElementById('usageHigh').innerText = '1,000 limit';
+}
+
+function logout() {
+  if(confirm('Logout?')) location.href = 'index.html';
+}
+
+window.onload = function() {
+  loadOverview();
+  // Show pilot banner always for now
+  document.getElementById('pilotBanner').style.display = 'flex';
+};
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1719898089f48e7',t:'MTc4MzM3MjIyNQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
