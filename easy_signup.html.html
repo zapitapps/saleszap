@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VendrAI — Start Your AI WhatsApp Sales Bot in 5 Minutes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:#0B0F1A;color:#E2E8F0;min-height:100vh;}
+.header{background:#0F172A;border-bottom:1px solid rgba(255,255,255,.07);padding:16px 24px;display:flex;align-items:center;gap:12px;}
+.logo{width:38px;height:38px;background:linear-gradient(135deg,#25D366,#128C7E);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.container{max-width:700px;margin:0 auto;padding:32px 20px;}
+.hero{text-align:center;margin-bottom:36px;}
+.hero h1{font-size:1.8rem;font-weight:900;margin-bottom:8px;}
+.hero h1 span{color:#25D366;}
+.hero p{color:#94A3B8;font-size:.9rem;max-width:520px;margin:0 auto;}
+.step-pills{display:flex;justify-content:center;gap:8px;margin:20px 0;flex-wrap:wrap;}
+.pill{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.2);color:#25D366;padding:4px 14px;border-radius:99px;font-size:.75rem;font-weight:700;}
+.card{background:#111827;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px;margin-bottom:20px;}
+.card h2{font-size:1rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.card p{color:#64748B;font-size:.8rem;margin-bottom:18px;}
+label{display:block;font-size:.78rem;color:#9CA3AF;margin-bottom:5px;margin-top:14px;}
+label:first-of-type{margin-top:0;}
+label span.req{color:#F87171;}
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#fff;font-size:.88rem;outline:none;transition:border-color .2s;}
+.inp:focus{border-color:#25D366;}
+.inp::placeholder{color:#4B5563;}
+select.inp option{background:#1F2937;}
+textarea.inp{resize:vertical;min-height:80px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.btn-green{width:100%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:none;padding:14px;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 0 24px rgba(37,211,102,.3);}
+.btn-green:hover{opacity:.9;transform:translateY(-1px);}
+.btn-green:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.plan-option{border:2px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+.plan-option:hover{border-color:rgba(37,211,102,.3);}
+.plan-option.selected{border-color:#25D366;background:rgba(37,211,102,.05);}
+.plan-option.selected::after{content:"✓";position:absolute;top:10px;right:12px;background:#25D366;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;}
+.otp-section{display:none;margin-top:16px;padding:16px;background:rgba(37,211,102,.06);border:1px solid rgba(37,211,102,.2);border-radius:12px;}
+.otp-section.show{display:block;}
+.otp-row{display:flex;gap:10px;}
+.otp-row .inp{flex:1;}
+.otp-row .btn-green{width:auto;padding:12px 20px;font-size:.85rem;}
+@media(max-width:500px){.grid2{grid-template-columns:1fr;}.otp-row{flex-direction:column;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🤖</div>
+  <div>
+    <div style="font-weight:900;font-size:1rem;">Vendr<span style="color:#25D366">AI</span></div>
+    <div style="font-size:.7rem;color:#64748B;">AI WhatsApp Bot for African Businesses</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Get Your <span>AI WhatsApp Sales Bot</span><br/>Live in 5 Minutes</h1>
+    <p>No technical knowledge needed. Your bot answers customers, takes orders, and handles Nigerian payments (PalmPay, Opay, bank transfer + proof).</p>
+    <div class="step-pills">
+      <span class="pill">✅ No Facebook App</span>
+      <span class="pill">✅ No Coding</span>
+      <span class="pill">✅ No Tech Setup</span>
+      <span class="pill">✅ Works in 5 Min</span>
+      <span class="pill">⭐ Full 7-Step Lifecycle</span>
+    </div>
+    <div style="margin-top:12px; font-size:.75rem; color:#25D366; font-weight:700;">
+      🚀 New realistic pricing: Starter just <strong>₦5,999</strong>/mo
+    </div>
+  </div>
+
+  <div id="mainForm">
+
+    <div class="card">
+      <h2>💳 Choose Your Plan</h2>
+      <p>All plans include 14-day free trial. No payment today!</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+        <div class="plan-option selected" id="plan-free" onclick="selectPlan('free')">
+          <div style="font-weight:800;font-size:.9rem;">Free Forever</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#25D366;margin:4px 0;">₦0</div>
+          <div style="font-size:.72rem;color:#64748B;">70 bot replies/month</div>
+        </div>
+        <div class="plan-option" id="plan-starter" onclick="selectPlan('starter')">
+          <div style="font-weight:800;font-size:.9rem;">Starter <span style="font-size:.65rem;color:#60A5FA;">NEW</span></div>
+          <div style="font-size:1.2rem;font-weight:900;color:#60A5FA;margin:4px 0;">₦5,999/mo</div>
+          <div style="font-size:.72rem;color:#64748B;">1,000 replies + Local payments</div>
+        </div>
+        <div class="plan-option" id="plan-growth" onclick="selectPlan('growth')">
+          <div style="font-weight:800;font-size:.9rem;">Growth ⭐</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#25D366;margin:4px 0;">₦14,999/mo</div>
+          <div style="font-size:.72rem;color:#64748B;">5,000 replies + Full CRM</div>
+        </div>
+        <div class="plan-option" id="plan-pro" onclick="selectPlan('pro')">
+          <div style="font-weight:800;font-size:.9rem;">Pro</div>
+          <div style="font-size:1.2rem;font-weight:900;color:#C084FC;margin:4px 0;">₦34,999/mo</div>
+          <div style="font-size:.72rem;color:#64748B;">Unlimited + Team support</div>
+        </div>
+      </div>
+      <input type="hidden" id="selectedPlan" value="free"/>
+    </div>
+
+    <div class="card">
+      <h2>🏪 Your Business Details</h2>
+      <p>Tell us about your business so the AI can sell like you.</p>
+
+      <label>Business Name <span class="req">*</span></label>
+      <input id="biz-name" class="inp" placeholder="e.g. Amara Fashion, TechHub Lagos"/>
+
+      <label>Business Category <span class="req">*</span></label>
+      <select id="biz-cat" class="inp">
+        <option value="">-- Select your type of business --</option>
+        <option value="fashion">👗 Fashion & Clothing (wigs, clothes, shoes)</option>
+        <option value="food">🍔 Food & Catering</option>
+        <option value="tech">💻 Tech & Electronics</option>
+        <option value="beauty">✨ Beauty & Skincare</option>
+        <option value="health">💊 Health & Wellness</option>
+        <option value="services">🔧 Services</option>
+        <option value="agric">🌾 Agriculture</option>
+        <option value="education">📚 Education</option>
+        <option value="other">📦 Other</option>
+      </select>
+
+      <label>What do you sell? (brief description) <span class="req">*</span></label>
+      <textarea id="biz-desc" class="inp" placeholder="e.g. We sell 100% human hair wigs and bundles. Nationwide delivery."></textarea>
+
+      <div class="grid2">
+        <div>
+          <label>Your City <span class="req">*</span></label>
+          <input id="biz-city" class="inp" placeholder="e.g. Lagos, Abuja"/>
+        </div>
+        <div>
+          <label>State</label>
+          <input id="biz-state" class="inp" placeholder="e.g. Lagos State"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📱 Your WhatsApp Number</h2>
+      <p>This is the number customers already message you on.</p>
+
+      <label>WhatsApp Phone Number (with country code) <span class="req">*</span></label>
+      <input id="whatsapp" class="inp" placeholder="+2348012345678" type="tel"/>
+
+      <label>Choose a Username <span class="req">*</span></label>
+      <input id="username" class="inp" placeholder="e.g. amarafashion (3-30 chars, letters/numbers/underscores)"/>
+
+      <label>Your Email (for login & updates) <span class="req">*</span></label>
+      <input id="email" class="inp" type="email" placeholder="you@example.com"/>
+
+      <label>Password <span class="req">*</span></label>
+      <input id="password" class="inp" type="password" placeholder="Min 8 characters"/>
+
+      <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:12px 14px;font-size:.8rem;color:#93C5FD;margin-top:16px;">
+        <strong>New realistic pricing (July 2026):</strong><br>
+        Starter is now only <strong>₦5,999/month</strong> — made for real Nigerian businesses.
+      </div>
+    </div>
+
+    <button onclick="submitSignup()" class="btn-green" id="submitBtn">Create My AI Bot Now →</button>
+    <p style="text-align:center;font-size:.72rem;color:#64748B;margin-top:12px;">Free 14-day trial • Cancel anytime • No credit card needed to start</p>
+
+    <!-- OTP Section -->
+    <div id="otpSection" class="otp-section">
+      <h3 style="font-size:.95rem;margin-bottom:6px;">🔐 Verify Your Email</h3>
+      <p style="font-size:.8rem;color:#94A3B8;margin-bottom:12px;">We sent a 6-digit code to your email. Enter it below to activate your account.</p>
+      <div class="otp-row">
+        <input id="otpInput" class="inp" placeholder="Enter 6-digit code" maxlength="6" type="text" inputmode="numeric" pattern="[0-9]*"/>
+        <button onclick="verifyOTP()" class="btn-green" id="otpBtn">Verify →</button>
+      </div>
+      <button onclick="resendOTP()" style="background:none;border:none;color:#25D366;font-size:.75rem;cursor:pointer;margin-top:8px;">Resend code</button>
+      <div id="otpStatus" style="font-size:.75rem;margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <div id="successScreen" style="display:none;">
+    <div style="background:rgba(37,211,102,.06);border:2px solid rgba(37,211,102,.3);border-radius:16px;padding:32px;text-align:center;">
+      <div style="font-size:4rem;margin-bottom:16px;">✅</div>
+      <h2 style="font-size:1.4rem;font-weight:900;color:#25D366;margin-bottom:8px;">Your VendrAI Bot is Live!</h2>
+      <p style="color:#64748B;margin-bottom:20px;">Send a test message to your WhatsApp number right now.</p>
+      
+      <div style="background:#0F172A;border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;font-size:.85rem;">
+        <strong>Next steps:</strong><br>
+        1. Message your number like a customer<br>
+        2. Watch the AI reply automatically<br>
+        3. Login to your dashboard to add products
+      </div>
+
+      <a href="dashboard.html" class="btn-green" style="text-decoration:none;display:block;margin-bottom:10px;">Go to Dashboard</a>
+      <a href="pricing.html" style="color:#25D366;font-size:.85rem;text-decoration:none;">See full pricing & upgrade options →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────
+const BACKEND_URL = 'https://vendrai-api.onrender.com';
+let selectedPlan = 'free';
+let pendingBusinessData = null;
+
+// ─── PLAN SELECTION ──────────────────────────────────────────
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('plan-' + plan).classList.add('selected');
+  document.getElementById('selectedPlan').value = plan;
+}
+
+// ─── SIGNUP ──────────────────────────────────────────────────
+async function submitSignup() {
+  const btn = document.getElementById('submitBtn');
+  const name = document.getElementById('biz-name').value.trim();
+  const cat = document.getElementById('biz-cat').value;
+  const desc = document.getElementById('biz-desc').value.trim();
+  const city = document.getElementById('biz-city').value.trim();
+  const state = document.getElementById('biz-state').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value.trim();
+
+  if (!name || !cat || !desc || !city || !whatsapp || !username || !email || !password) {
+    alert('Please fill all required fields');
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+    alert('Username: 3-30 chars, letters/numbers/underscores only.');
+    return;
+  }
+
+  if (!/^\+[1-9]\d{7,14}$/.test(whatsapp)) {
+    alert('WhatsApp number must include country code e.g. +2348012345678');
+    return;
+  }
+
+  if (password.length < 8) {
+    alert('Password must be at least 8 characters.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Creating your account...';
+
+  try {
+    const payload = {
+      username: username,
+      email: email,
+      phone: whatsapp,
+      password: password,
+      businessName: name,
+      businessCategory: cat,
+      businessDesc: desc,
+      city: city,
+      state: state,
+      plan: selectedPlan,
+      referralCode: new URLSearchParams(window.location.search).get('ref') || null
+    };
+
+    const res = await fetch(`${BACKEND_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      pendingBusinessData = {
+        email: email,
+        token: data.session_token,
+        businessId: data.business.id
+      };
+      
+      localStorage.setItem('vendr_token', data.session_token);
+      localStorage.setItem('vendrai_biz_id', data.business.id);
+      
+      // Show OTP section
+      document.getElementById('otpSection').classList.add('show');
+      document.getElementById('mainForm').querySelector('.card:last-of-type').style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      
+      document.getElementById('otpStatus').textContent = '✅ Code sent to ' + email;
+      document.getElementById('otpStatus').style.color = '#25D366';
+      
+      btn.textContent = '✅ Account created! Verify your email below.';
+      btn.disabled = false;
+    } else {
+      alert('⚠️ ' + (data.error || 'Registration failed. Please try again.'));
+      btn.textContent = 'Create My AI Bot Now →';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    alert('⚠️ Could not connect to server. Please check your internet and try again.');
+    btn.textContent = 'Create My AI Bot Now →';
+    btn.disabled = false;
+  }
+}
+
+// ─── VERIFY OTP ──────────────────────────────────────────────
+async function verifyOTP() {
+  const otp = document.getElementById('otpInput').value.trim();
+  const status = document.getElementById('otpStatus');
+  
+  if (!otp || otp.length !== 6) {
+    status.textContent = '⚠️ Please enter the 6-digit code';
+    status.style.color = '#F87171';
+    return;
+  }
+
+  const btn = document.getElementById('otpBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verifying...';
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/verify-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-token': pendingBusinessData?.token || localStorage.getItem('vendr_token')
+      },
+      body: JSON.stringify({ otp: otp })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      status.textContent = '✅ Email verified! Your account is active.';
+      status.style.color = '#25D366';
+      
+      setTimeout(() => {
+        document.getElementById('mainForm').style.display = 'none';
+        document.getElementById('otpSection').style.display = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+      }, 1000);
+    } else {
+      status.textContent = '⚠️ ' + (data.error || 'Invalid code. Please try again.');
+      status.style.color = '#F87171';
+      btn.disabled = false;
+      btn.textContent = 'Verify →';
+    }
+  } catch (err) {
+    status.textContent = '⚠️ Connection error. Please try again.';
+    status.style.color = '#F87171';
+    btn.disabled = false;
+    btn.textContent = 'Verify →';
+  }
+}
+
+// ─── RESEND OTP ──────────────────────────────────────────────
+async function resendOTP() {
+  const status = document.getElementById('otpStatus');
+  status.textContent = '⏳ Sending new code...';
+  status.style.color = '#94A3B8';
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-token': pendingBusinessData?.token || localStorage.getItem('vendr_token')
+      }
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      status.textContent = '✅ New code sent to your ' + data.delivery;
+      status.style.color = '#25D366';
+    } else {
+      status.textContent = '⚠️ ' + (data.message || 'Failed to resend. Please try again.');
+      status.style.color = '#F87171';
+    }
+  } catch (err) {
+    status.textContent = '⚠️ Connection error. Please try again.';
+    status.style.color = '#F87171';
+  }
+}
+
+// ─── ENTER KEY SUPPORT ───────────────────────────────────────
+document.getElementById('otpInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') verifyOTP();
+});
+
+document.querySelectorAll('.inp').forEach(input => {
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.id !== 'otpInput') {
+      const form = document.getElementById('mainForm');
+      const inputs = form.querySelectorAll('.inp');
+      const idx = Array.from(inputs).indexOf(this);
+      if (idx < inputs.length - 1) inputs[idx + 1].focus();
+      else submitSignup();
+    }
+  });
+});
+
+// ─── INIT ────────────────────────────────────────────────────
+window.onload = function() {
+  document.getElementById('plan-free').classList.add('selected');
+  // Check for referral code
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  if (ref) {
+    document.getElementById('username').value = ref.toLowerCase().replace(/[^a-zA-Z0-9_]/g, '');
+  }
+};
+</script>
+</body>
+</html>
