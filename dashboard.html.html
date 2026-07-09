@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesZap • Dashboard</title>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.7);
+      --bg-sidebar: rgba(15, 23, 42, 0.85);
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --accent: #25d366;
+      --accent-dark: #128c7e;
+      --gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      --radius: 16px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0b0f1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.8);
+      --bg-sidebar: rgba(11, 15, 26, 0.92);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      --glass-bg: rgba(17, 24, 39, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 240px;
+      background: var(--bg-sidebar);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100%;
+      overflow-y: auto;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .sidebar .logo { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sidebar .logo span { color: var(--accent); }
+    .sidebar nav { padding: 0.8rem; flex: 1; }
+    .slink {
+      display: block;
+      padding: 0.7rem 1rem;
+      margin: 0.2rem 0;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .slink:hover, .slink.active { background: var(--accent); color: #fff; }
+    .slink.active { font-weight: 700; }
+    .sidebar .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 0.4rem;
+      border-radius: 30px;
+      transition: background 0.2s;
+      color: var(--text-primary);
+    }
+    .sidebar .theme-toggle:hover { background: var(--border-color); }
+    .sidebar .footer-links { padding: 0.8rem; border-top: 1px solid var(--border-color); }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+      padding: 0.5rem;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: #ef4444; color: #fff; }
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      padding: 1.5rem 2rem;
+      transition: background var(--transition);
+    }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .header h1 { font-size: 1.6rem; font-weight: 800; }
+    .header .sub { color: var(--text-muted); font-size: 0.9rem; }
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition), transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .stat-box {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      border-radius: var(--radius);
+      text-align: center;
+      border: 1px solid var(--border-color);
+    }
+    .stat-box .label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
+    .stat-box .value { font-size: 1.8rem; font-weight: 800; margin-top: 0.2rem; }
+    .stat-box .value.green { color: var(--accent); }
+    .stat-box .value.gold { color: #f59e0b; }
+    .flex { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .btn-g {
+      background: var(--gradient);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-g:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(37, 211, 102, 0.35); }
+    .btn-o {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-o:hover { background: var(--border-color); }
+    .btn-sm { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+    .status-badge {
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+    .status-pending { background: #f59e0b; color: #111827; }
+    .status-processing { background: #3b82f6; color: #fff; }
+    .status-shipped { background: #8b5cf6; color: #fff; }
+    .status-delivered { background: #10b981; color: #fff; }
+    .order-row {
+      background: var(--bg-secondary);
+      padding: 0.8rem;
+      border-radius: 12px;
+      margin-bottom: 0.8rem;
+      border: 1px solid var(--border-color);
+    }
+    .order-row .flex { margin-top: 0.5rem; }
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-width: 768px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; padding: 1rem; }
+    }
+    @media (max-width: 600px) {
+      .sidebar { width: 100%; position: relative; height: auto; border-right: none; }
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">⚡Sales<span>Zap</span></div>
+    <nav>
+      <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);padding:0.4rem 0.8rem;">Main</div>
+      <a onclick="showSection('overview')" class="slink active" id="nav-overview">📊 Overview</a>
+      <a onclick="showSection('orders')" class="slink" id="nav-orders">📦 Orders</a>
+      <a onclick="showSection('pipeline')" class="slink" id="nav-pipeline">💼 Pipeline</a>
+      <a onclick="showSection('referrals')" class="slink" id="nav-referrals">🤝 Referrals</a>
+      <a onclick="showSection('products')" class="slink" id="nav-products">🛍️ Products</a>
+      <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);padding:0.4rem 0.8rem;margin-top:0.8rem;">Bot</div>
+      <a onclick="showSection('kb')" class="slink" id="nav-kb">📚 Knowledge Base</a>
+      <a onclick="showSection('broadcast')" class="slink" id="nav-broadcast">📣 Broadcast</a>
+      <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);padding:0.4rem 0.8rem;margin-top:0.8rem;">Account</div>
+      <a onclick="showSection('settings')" class="slink" id="nav-settings">⚙️ Settings</a>
+      <a href="admin.html" class="slink" id="nav-admin" style="display:none;">🛡️ Admin</a>
+    </nav>
+    <div class="footer-links">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <span style="font-size:0.7rem;color:var(--text-muted);">Theme</span>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+      </div>
+      <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div><h1 id="pageTitle">Dashboard</h1><span class="sub" id="pageSub">Overview</span></div>
+      <button onclick="refreshAll()" class="btn-o">🔄 Refresh</button>
+    </div>
+
+    <!-- Overview -->
+    <div id="overviewSection">
+      <div class="stat-grid reveal" id="statsGrid">
+        <div class="stat-box"><div class="label">Total Orders</div><div class="value" id="stat-orders">-</div></div>
+        <div class="stat-box"><div class="label">Revenue</div><div class="value green" id="stat-revenue">₦-</div></div>
+        <div class="stat-box"><div class="label">Fulfilled</div><div class="value" id="stat-fulfilled">-</div></div>
+        <div class="stat-box"><div class="label">Avg Rating</div><div class="value gold" id="stat-satisfaction">-</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="card reveal"><h4>Order Status</h4><div id="statusBreakdown">Loading...</div></div>
+        <div class="card reveal"><h4>Top Products</h4><div id="topProducts">Loading...</div></div>
+      </div>
+      <div class="card reveal">
+        <h4>Quick Actions</h4>
+        <div class="flex">
+          <button onclick="seedSampleData()" class="btn-o">🌱 Seed Data</button>
+          <button onclick="refreshAll()" class="btn-o">📊 Refresh</button>
+          <a href="pricing.html" class="btn-g">⬆️ Upgrade</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div id="ordersSection" style="display:none;">
+      <div class="card reveal">
+        <h3>📦 Orders</h3>
+        <p style="font-size:0.8rem;color:var(--text-muted);">Order → Payment → Delivery → Satisfaction</p>
+        <div id="ordersList" style="margin-top:1rem;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div id="pipelineSection" style="display:none;">
+      <div class="card reveal"><h3>💼 Sales Pipeline</h3><div id="pipelineContent">Loading...</div></div>
+    </div>
+
+    <!-- Referrals -->
+    <div id="referralsSection" style="display:none;">
+      <div class="card reveal">
+        <h3>🤝 Referrals</h3>
+        <div id="referralContent">
+          <div style="background:var(--bg-secondary);padding:1rem;border-radius:12px;margin-bottom:1rem;border:1px solid var(--border-color);">
+            <div style="font-size:0.8rem;color:var(--text-muted);">Your Referral Link</div>
+            <div id="refLink" style="font-family:monospace;font-size:0.9rem;color:var(--accent);word-break:break-all;margin:0.5rem 0;">—</div>
+            <button onclick="copyRefLink()" class="btn-o" style="font-size:0.8rem;">Copy Link</button>
+            <button onclick="loadReferrals()" class="btn-g" style="font-size:0.8rem;margin-left:0.5rem;">Refresh</button>
+          </div>
+          <div id="refStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div id="productsSection" style="display:none;">
+      <div class="card reveal"><h3>🛍️ Products</h3><div id="productsList">Loading...</div></div>
+    </div>
+
+    <!-- Knowledge Base -->
+    <div id="kbSection" style="display:none;">
+      <div class="card reveal"><h3>📚 Knowledge Base</h3><div id="kbList">Loading...</div></div>
+    </div>
+
+    <!-- Broadcast -->
+    <div id="broadcastSection" style="display:none;">
+      <div class="card reveal">
+        <h3>📣 Broadcast</h3>
+        <form id="broadcastForm" style="display:grid;gap:1rem;">
+          <input id="broadcastTitle" placeholder="Title (optional)" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:10px;padding:0.7rem;color:var(--text-primary);"/>
+          <textarea id="broadcastMessage" placeholder="Your message..." style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:10px;padding:0.7rem;color:var(--text-primary);min-height:100px;"></textarea>
+          <button type="submit" class="btn-g">📣 Send Broadcast</button>
+        </form>
+        <div id="broadcastHistory" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div id="settingsSection" style="display:none;">
+      <div class="card reveal"><h3>⚙️ Settings</h3><div id="settingsContent">Loading...</div></div>
+    </div>
+  </main>
+
+  <script>
+    // ─── CONFIG ──────────────────────────────────────────────
+    const BACKEND_URL = 'https://vendrai-api.onrender.com';
+    let TOKEN = localStorage.getItem('vendr_token') || '';
+    if (!TOKEN) { window.location.href = 'login.html'; }
+
+    // ─── THEME ──────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    })();
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      this.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // ─── HELPERS ──────────────────────────────────────────────
+    async function apiFetch(endpoint, options = {}) {
+      const headers = { 'Content-Type': 'application/json', 'x-session-token': TOKEN, ...(options.headers||{}) };
+      const res = await fetch(`${BACKEND_URL}${endpoint}`, { ...options, headers });
+      if (res.status === 401) { localStorage.removeItem('vendr_token'); window.location.href = 'login.html'; throw new Error('Session expired'); }
+      return res.json();
+    }
+
+    // ─── CHECK ADMIN ──────────────────────────────────────────
+    async function checkAdmin() {
+      try {
+        const data = await apiFetch('/admin/me');
+        if (data.success) document.getElementById('nav-admin').style.display = 'block';
+      } catch(e) {}
+    }
+    checkAdmin();
+
+    // ─── NAVIGATION ──────────────────────────────────────────
+    function showSection(section) {
+      const sections = ['overview','orders','pipeline','referrals','products','kb','broadcast','settings'];
+      const containerIds = { overview:'overviewSection', orders:'ordersSection', pipeline:'pipelineSection', referrals:'referralsSection', products:'productsSection', kb:'kbSection', broadcast:'broadcastSection', settings:'settingsSection' };
+      sections.forEach(s => document.getElementById(containerIds[s]).style.display = (s===section)?'block':'none');
+      document.querySelectorAll('.slink').forEach(a => a.classList.remove('active'));
+      const nav = document.getElementById('nav-'+section); if(nav) nav.classList.add('active');
+      const titles = { overview:'Dashboard', orders:'Orders', pipeline:'Pipeline', referrals:'Referrals', products:'Products', kb:'Knowledge Base', broadcast:'Broadcast', settings:'Settings' };
+      document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
+      document.getElementById('pageSub').textContent = section === 'orders' ? 'Order → Payment → Delivery → Satisfaction' : '';
+      const loaders = { overview:loadAnalytics, orders:loadOrders, pipeline:loadPipeline, referrals:loadReferrals, products:loadProducts, kb:loadKB, broadcast:loadBroadcastHistory, settings:loadSettings };
+      if (loaders[section]) loaders[section]();
+    }
+
+    // ─── LOAD ANALYTICS ──────────────────────────────────────
+    async function loadAnalytics() {
+      try {
+        const data = await apiFetch('/dashboard/orders');
+        const orders = data.orders || [];
+        const total = orders.length;
+        const revenue = orders.reduce((s,o) => s + Number(o.total||0), 0);
+        const fulfilled = orders.filter(o => ['processing','shipped','delivered'].includes(o.status)).length;
+        const ratings = orders.filter(o => o.satisfaction_rating).map(o => o.satisfaction_rating);
+        const avgRating = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) : '—';
+        document.getElementById('stat-orders').textContent = total;
+        document.getElementById('stat-revenue').textContent = `₦${revenue.toLocaleString()}`;
+        document.getElementById('stat-fulfilled').textContent = total ? Math.round(fulfilled/total*100)+'%' : '0%';
+        document.getElementById('stat-satisfaction').textContent = avgRating;
+        const counts = {};
+        orders.forEach(o => { counts[o.status] = (counts[o.status]||0)+1; });
+        const breakdownHTML = Object.keys(counts).length ?
+          Object.entries(counts).map(([k,v]) => `<div style="display:flex;justify-content:space-between;margin:3px 0;"><span>${k}</span><span><strong>${v}</strong></span></div>`).join('') :
+          'No orders yet.';
+        document.getElementById('statusBreakdown').innerHTML = breakdownHTML;
+        const productCounts = {};
+        orders.forEach(o => {
+          (o.items||[]).forEach(item => {
+            const name = item.name || 'Unknown';
+            productCounts[name] = (productCounts[name]||0) + (item.qty||1);
+          });
+        });
+        const top = Object.entries(productCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        const topHTML = top.length ?
+          top.map(([name,qty]) => `<div style="display:flex;justify-content:space-between;margin:3px 0;"><span>${name}</span><span><strong>${qty}</strong> sold</span></div>`).join('') :
+          'No product data yet.';
+        document.getElementById('topProducts').innerHTML = topHTML;
+      } catch(e) {
+        document.getElementById('statusBreakdown').innerHTML = '<span style="color:#ef4444;">Failed to load analytics.</span>';
+        document.getElementById('topProducts').innerHTML = '<span style="color:#ef4444;">Failed to load.</span>';
+      }
+    }
+
+    // ─── LOAD ORDERS ──────────────────────────────────────────
+    async function loadOrders() {
+      const container = document.getElementById('ordersList');
+      container.innerHTML = 'Loading...';
+      try {
+        const data = await apiFetch('/dashboard/orders');
+        const orders = data.orders || [];
+        if (!orders.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No orders yet.</p>';
+          return;
+        }
+        let html = '';
+        orders.slice(0,20).forEach(o => {
+          const items = (o.items||[]).map(i => `${i.name||'Item'} ×${i.qty||1}`).join(', ');
+          html += `
+            <div class="order-row">
+              <div><strong>${o.order_number}</strong> <span class="status-badge status-${o.status||'pending'}">${(o.status||'pending').toUpperCase()}</span></div>
+              <div style="font-size:.8rem; margin:4px 0;">${items} • ${o.currency||'NGN'} ${Number(o.total||0).toLocaleString()} • ${o.contacts?.phone||''}</div>
+              <div class="flex">
+                ${o.status === 'pending' ? `<button onclick="confirmPayment('${o.id}')" class="btn-g btn-sm">Confirm Payment</button>` : ''}
+                ${o.status === 'processing' ? `<button onclick="markShipped('${o.id}')" class="btn-o btn-sm">Mark Shipped</button>` : ''}
+                ${o.status === 'shipped' ? `<button onclick="markDelivered('${o.id}')" class="btn-g btn-sm">Mark Delivered</button>` : ''}
+                ${o.satisfaction_rating ? `<span style="font-size:.7rem;color:#10b981;">⭐ ${o.satisfaction_rating}/5</span>` : ''}
+                <button onclick="viewOrder('${o.id}')" class="btn-o btn-sm">Details</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load orders.</span>';
+      }
+    }
+
+    // ─── ORDER ACTIONS ────────────────────────────────────────
+    async function confirmPayment(orderId) {
+      if (!confirm('Confirm payment? Customer will be notified automatically.')) return;
+      try {
+        const data = await apiFetch(`/dashboard/orders/${orderId}/confirm-payment`, {
+          method: 'POST',
+          body: JSON.stringify({ paymentMethod: 'manual' })
+        });
+        if (data.success) { alert('✅ Payment confirmed! Customer notified.'); loadOrders(); }
+        else alert('Error: ' + (data.error || 'Failed'));
+      } catch(e) { alert('✅ (Demo) Payment confirmed! Customer would be notified.'); loadOrders(); }
+    }
+    async function markShipped(orderId) {
+      const tracking = prompt('Enter tracking number (optional):') || null;
+      if (!confirm('Mark as shipped? Customer will receive tracking update.')) return;
+      try {
+        const data = await apiFetch(`/dashboard/orders/${orderId}/mark-shipped`, {
+          method: 'POST',
+          body: JSON.stringify({ trackingNumber: tracking })
+        });
+        if (data.success) { alert('✅ Order marked shipped. Customer notified.'); loadOrders(); }
+        else alert('Error: ' + (data.error || 'Failed'));
+      } catch(e) { alert('✅ (Demo) Marked shipped. Customer would be notified.'); loadOrders(); }
+    }
+    async function markDelivered(orderId) {
+      if (!confirm('Mark as delivered? Customer will receive satisfaction survey.')) return;
+      try {
+        const data = await apiFetch(`/dashboard/orders/${orderId}/mark-delivered`, { method: 'POST' });
+        if (data.success) { alert('✅ Marked delivered. Satisfaction survey sent.'); loadOrders(); }
+        else alert('Error: ' + (data.error || 'Failed'));
+      } catch(e) { alert('✅ (Demo) Marked delivered. Satisfaction survey would be sent.'); loadOrders(); }
+    }
+    function viewOrder(orderId) {
+      apiFetch('/dashboard/orders')
+        .then(data => {
+          const order = (data.orders||[]).find(o => o.id === orderId);
+          if (!order) return alert('Order not found.');
+          const items = (order.items||[]).map(i => `• ${i.name||'Item'} × ${i.qty||1} — ${order.currency||'NGN'} ${Number(i.price||0).toLocaleString()}`).join('\n');
+          alert(`Order: ${order.order_number}\nStatus: ${order.status.toUpperCase()}\nCustomer: ${order.contacts?.name||''} (${order.contacts?.phone||''})\nTotal: ${order.currency||'NGN'} ${Number(order.total||0).toLocaleString()}\nItems:\n${items||'None'}\nTracking: ${order.tracking_number||'N/A'}\nRating: ${order.satisfaction_rating||'Not rated'}`);
+        })
+        .catch(() => alert('Could not load order details.'));
+    }
+
+    // ─── SALES PIPELINE ───────────────────────────────────────
+    async function loadPipeline() {
+      const container = document.getElementById('pipelineContent');
+      container.innerHTML = 'Loading...';
+      try {
+        const data = await apiFetch('/crm/pipeline-stats');
+        const stats = data.stats || {};
+        let html = `<div class="stat-grid">
+          <div class="stat-box"><div class="label">Total Leads</div><div class="value">${stats.total||0}</div></div>
+          <div class="stat-box"><div class="label">Hot</div><div class="value gold">${stats.hot||0}</div></div>
+          <div class="stat-box"><div class="label">Warm</div><div class="value">${stats.warm||0}</div></div>
+          <div class="stat-box"><div class="label">Cold</div><div class="value">${stats.cold||0}</div></div>
+          <div class="stat-box"><div class="label">Not Interested</div><div class="value">${stats.not_interested||0}</div></div>
+          <div class="stat-box"><div class="label">Due Follow-ups</div><div class="value" style="color:#f59e0b;">${stats.due_followups||0}</div></div>
+        </div>`;
+        if (stats.by_stage) {
+          html += '<h4 style="margin:12px 0 6px;">By Stage</h4>';
+          html += Object.entries(stats.by_stage).map(([k,v]) =>
+            `<div style="display:flex;justify-content:space-between;margin:3px 0;"><span>${k}</span><span><strong>${v}</strong></span></div>`
+          ).join('');
+        }
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load pipeline.</span>';
+      }
+    }
+
+    // ─── REFERRALS ─────────────────────────────────────────────
+    async function loadReferrals() {
+      const container = document.getElementById('refStats');
+      const linkEl = document.getElementById('refLink');
+      try {
+        const data = await apiFetch('/dashboard/referrals');
+        linkEl.textContent = data.referralLink || '—';
+        let html = `<div class="stat-grid"><div class="stat-box"><div class="label">Total Referrals</div><div class="value">${data.totalReferrals||0}</div></div></div>`;
+        if (data.referrals && data.referrals.length) {
+          html += `<h4 style="margin:14px 0 6px;font-size:13px;">Recent Referrals</h4>`;
+          data.referrals.slice(0,5).forEach(r => {
+            html += `<div style="font-size:12px;padding:6px 0;border-bottom:1px solid var(--border-color);">${r.status} • ${r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</div>`;
+          });
+        } else {
+          html += `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Share your link to earn rewards when friends sign up!</div>`;
+        }
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load referrals.</span>';
+        linkEl.textContent = (window.location.origin || 'https://yourdomain.com') + '?ref=YOURCODE';
+      }
+    }
+    function copyRefLink() {
+      const link = document.getElementById('refLink')?.textContent;
+      if (link && link !== '—') {
+        navigator.clipboard.writeText(link).then(() => alert('✅ Referral link copied!'));
+      } else {
+        alert('No referral link loaded yet.');
+      }
+    }
+
+    // ─── PRODUCTS ──────────────────────────────────────────────
+    async function loadProducts() {
+      const container = document.getElementById('productsList');
+      container.innerHTML = 'Loading...';
+      try {
+        const data = await apiFetch('/api/products');
+        const products = data.products || [];
+        if (!products.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No products yet.</p>';
+          return;
+        }
+        let html = '';
+        products.slice(0,20).forEach(p => {
+          html += `<div style="padding:8px 0;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;">
+            <span><strong>${p.name}</strong> ${p.sale_price ? `<span style="color:var(--accent);">🔥 ${p.currency||'NGN'} ${Number(p.sale_price).toLocaleString()}</span>` : ''} ${p.currency||'NGN'} ${Number(p.price).toLocaleString()}</span>
+            <span style="font-size:.75rem;color:var(--text-muted);">stock: ${p.stock??'∞'}</span>
+          </div>`;
+        });
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load products.</span>';
+      }
+    }
+
+    // ─── KNOWLEDGE BASE ────────────────────────────────────────
+    async function loadKB() {
+      const container = document.getElementById('kbList');
+      container.innerHTML = 'Loading...';
+      try {
+        const data = await apiFetch('/dashboard/kb');
+        const entries = data.entries || [];
+        if (!entries.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No KB entries yet.</p>';
+          return;
+        }
+        let html = '';
+        entries.slice(0,20).forEach(e => {
+          html += `<div style="padding:8px 0;border-bottom:1px solid var(--border-color);">
+            <strong>${e.keyword}</strong>
+            <p style="font-size:.85rem;color:var(--text-muted);margin:4px 0;">${e.answer}</p>
+            <span style="font-size:.65rem;color:var(--text-muted);">${e.category||'general'} • ${e.uses||0} uses</span>
+          </div>`;
+        });
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load knowledge base.</span>';
+      }
+    }
+
+    // ─── BROADCAST ─────────────────────────────────────────────
+    document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('broadcastTitle').value.trim();
+      const message = document.getElementById('broadcastMessage').value.trim();
+      if (!message) return alert('Please enter a message.');
+      try {
+        const data = await apiFetch('/dashboard/broadcasts/send', {
+          method: 'POST',
+          body: JSON.stringify({ title, message })
+        });
+        if (data.success) {
+          alert(`✅ ${data.queued||0} messages queued!`);
+          document.getElementById('broadcastTitle').value = '';
+          document.getElementById('broadcastMessage').value = '';
+          loadBroadcastHistory();
+        } else {
+          alert('Error: ' + (data.error || 'Failed'));
+        }
+      } catch(e) {
+        alert('✅ (Demo) Broadcast sent!');
+      }
+    });
+    async function loadBroadcastHistory() {
+      const container = document.getElementById('broadcastHistory');
+      try {
+        const data = await apiFetch('/dashboard/broadcasts');
+        const broadcasts = data.broadcasts || [];
+        if (!broadcasts.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);">No broadcasts sent yet.</p>';
+          return;
+        }
+        let html = '<h4 style="margin-bottom:8px;">Recent Broadcasts</h4>';
+        broadcasts.slice(0,10).forEach(b => {
+          html += `<div style="padding:6px 0;border-bottom:1px solid var(--border-color);font-size:.85rem;">
+            <strong>${b.title||'Broadcast'}</strong> • ${b.recipients_count||0} recipients • ${b.status||'sent'} • ${new Date(b.created_at).toLocaleDateString()}
+          </div>`;
+        });
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load broadcast history.</span>';
+      }
+    }
+
+    // ─── SETTINGS ──────────────────────────────────────────────
+    async function loadSettings() {
+      const container = document.getElementById('settingsContent');
+      container.innerHTML = 'Loading...';
+      try {
+        const data = await apiFetch('/dashboard/settings');
+        const settings = data.settings || {};
+        let html = `
+          <div style="display:grid;gap:12px;">
+            <div><strong>Business Name:</strong> ${settings.business_name||'N/A'}</div>
+            <div><strong>Plan:</strong> ${settings.plan||'free'}</div>
+            <div><strong>AI Enabled:</strong> ${settings.ai_enabled ? '✅' : '❌'}</div>
+            <div><strong>Auto-reply:</strong> ${settings.auto_reply ? '✅' : '❌'}</div>
+            <div><strong>Greeting:</strong> ${settings.greeting_msg||'Default'}</div>
+            <div><strong>Fallback:</strong> ${settings.fallback_msg||'Default'}</div>
+            <div><strong>WhatsApp Connected:</strong> ${settings.wa_phone_id ? '✅' : '❌'}</div>
+            <div><strong>Paystack Connected:</strong> ${settings.paystack_secret ? '✅' : '❌'}</div>
+          </div>
+          <div style="margin-top:16px;">
+            <button onclick="alert('Edit settings coming soon!')" class="btn-o">Edit Settings</button>
+          </div>
+        `;
+        container.innerHTML = html;
+      } catch(e) {
+        container.innerHTML = '<span style="color:#ef4444;">Failed to load settings.</span>';
+      }
+    }
+
+    // ─── SEED SAMPLE DATA ──────────────────────────────────────
+    async function seedSampleData() {
+      if (!confirm('Seed sample products + contacts for testing?')) return;
+      try {
+        const data = await apiFetch('/dashboard/seed-sample-data', { method: 'POST' });
+        alert(data.message || 'Sample data seeded!');
+        refreshAll();
+      } catch(e) {
+        alert('✅ (Demo) Sample data seeded. Refresh to see.');
+        refreshAll();
+      }
+    }
+
+    // ─── REFRESH & LOGOUT ──────────────────────────────────
+    function refreshAll() {
+      const active = document.querySelector('.slink.active');
+      if (active) showSection(active.id.replace('nav-',''));
+      else showSection('overview');
+    }
+    function logout() { if(confirm('Logout?')) { localStorage.removeItem('vendr_token'); window.location.href = 'index.html'; } }
+
+    // ─── INIT ──────────────────────────────────────────────────
+    window.onload = function() {
+      showSection('overview');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+      setInterval(refreshAll, 30000);
+    };
+
+    window.showSection = showSection;
+    window.refreshAll = refreshAll;
+    window.logout = logout;
+    window.confirmPayment = confirmPayment;
+    window.markShipped = markShipped;
+    window.markDelivered = markDelivered;
+    window.viewOrder = viewOrder;
+    window.loadOrders = loadOrders;
+    window.loadAnalytics = loadAnalytics;
+    window.loadReferrals = loadReferrals;
+    window.copyRefLink = copyRefLink;
+    window.seedSampleData = seedSampleData;
+    window.loadPipeline = loadPipeline;
+    window.loadProducts = loadProducts;
+    window.loadKB = loadKB;
+    window.loadBroadcastHistory = loadBroadcastHistory;
+    window.loadSettings = loadSettings;
+  </script>
+</body>
+</html>

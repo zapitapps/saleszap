@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesZap – AI Sales Bot for WhatsApp</title>
+  <meta name="description" content="Turn WhatsApp into your 24/7 AI sales rep. Auto-reply, take orders, collect payments, and grow your business – all for FREE." />
+  <style>
+    /* ─── CSS Variables (Light & Dark) ─── */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.7);
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --accent: #25d366;
+      --accent-dark: #128c7e;
+      --gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      --radius: 20px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0b0f1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.8);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      --glass-bg: rgba(17, 24, 39, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-weight: 800; letter-spacing: -0.02em; }
+    h1 { font-size: clamp(2.8rem, 8vw, 5rem); line-height: 1.05; }
+    h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 0.5rem; }
+    p { color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .btn-primary {
+      display: inline-block;
+      background: var(--gradient);
+      color: #fff;
+      font-weight: 700;
+      padding: 0.9rem 2.2rem;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
+    }
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.9rem 2.2rem;
+      border-radius: 50px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-secondary:hover {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+    }
+    /* ─── Navbar ─── */
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo { font-weight: 900; font-size: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a { color: var(--text-secondary); text-decoration: none; font-weight: 600; }
+    .nav-links a:hover { color: var(--text-primary); }
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 30px;
+      transition: background 0.2s;
+    }
+    .theme-toggle:hover { background: var(--border-color); }
+    /* ─── Hero ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 7rem 1.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(37, 211, 102, 0.12), transparent 60%),
+                  radial-gradient(circle at 80% 50%, rgba(37, 211, 102, 0.06), transparent 60%);
+      z-index: 0;
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero .sub { font-size: 1.2rem; margin: 1.5rem auto; max-width: 600px; }
+    .hero .cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+    .particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.2;
+      animation: float 20s infinite linear;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-120px) translateX(60px); }
+      100% { transform: translateY(0) translateX(0); }
+    }
+    section { padding: 5rem 0; }
+    .section-title { text-align: center; margin-bottom: 3rem; }
+    .section-title p { margin-top: 0.5rem; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border-color);
+      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: var(--shadow);
+    }
+    .feature-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      counter-reset: step;
+    }
+    .step {
+      text-align: center;
+      position: relative;
+      padding: 1.5rem;
+      counter-increment: step;
+    }
+    .step::before {
+      content: counter(step);
+      position: absolute;
+      top: -1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gradient);
+      color: #fff;
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      align-items: start;
+    }
+    .pricing-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      transition: transform 0.3s;
+    }
+    .pricing-card:hover { transform: translateY(-4px); }
+    .pricing-card.popular {
+      border: 2px solid var(--accent);
+      transform: scale(1.02);
+    }
+    .popular-badge {
+      background: var(--accent);
+      color: #fff;
+      padding: 0.2rem 1.2rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    .price { font-size: 2.5rem; font-weight: 900; margin: 0.5rem 0; }
+    .price small { font-size: 1rem; font-weight: 400; color: var(--text-muted); }
+    .faq-list { max-width: 700px; margin: 0 auto; }
+    .faq-item {
+      background: var(--bg-card);
+      border-radius: 12px;
+      margin-bottom: 0.8rem;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .faq-question {
+      padding: 1.2rem 1.5rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+    .faq-question:hover { background: var(--border-color); }
+    .faq-answer {
+      padding: 0 1.5rem 1.2rem;
+      color: var(--text-secondary);
+      display: none;
+    }
+    .faq-item.open .faq-answer { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(180deg); }
+    .footer {
+      border-top: 1px solid var(--border-color);
+      padding: 2rem 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-width: 768px) {
+      .navbar { padding: 0.6rem 1rem; }
+      .nav-links { gap: 1rem; display: none; }
+      .nav-links.mobile { display: flex; flex-direction: column; background: var(--bg-secondary); padding: 1rem; position: absolute; top: 60px; left: 0; right: 0; border-bottom: 1px solid var(--border-color); }
+      .hero { padding-top: 6rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">⚡Sales<span>Zap</span></div>
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="login.html" class="btn-secondary" style="padding:0.4rem 1.2rem;">Login</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+    </div>
+    <button id="mobileMenuToggle" style="background:none;border:none;font-size:1.5rem;color:var(--text-primary);display:none;" aria-label="Menu">☰</button>
+  </nav>
+
+  <section class="hero">
+    <div class="particles">
+      <div class="particle" style="left:10%;top:20%;animation-duration:18s;"></div>
+      <div class="particle" style="left:85%;top:15%;animation-duration:22s;width:8px;height:8px;"></div>
+      <div class="particle" style="left:45%;top:70%;animation-duration:25s;width:5px;height:5px;"></div>
+    </div>
+    <div class="hero-content">
+      <h1>Your Business Needs a<br><span>24/7 AI Sales Rep</span> on WhatsApp</h1>
+      <p class="sub">Auto‑reply, take orders, collect payments, and grow revenue – while you sleep. Built for African SMEs.</p>
+      <div class="cta-group">
+        <a href="easy_signup.html" class="btn-primary">🚀 Start Free – 14‑Day Trial</a>
+        <a href="#features" class="btn-secondary">Learn More →</a>
+      </div>
+      <div style="margin-top:2rem;display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;font-size:0.85rem;color:var(--text-muted);">
+        <span>✅ No coding</span>
+        <span>✅ 10‑min setup</span>
+        <span>✅ Free forever plan</span>
+        <span>✅ Paystack & mobile money</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding:2rem 0;border-top:1px solid var(--border-color);border-bottom:1px solid var(--border-color);">
+    <div class="container" style="text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:2rem;align-items:center;opacity:0.7;">
+      <span style="font-weight:700;color:var(--text-muted);font-size:0.8rem;letter-spacing:0.1em;">TRUSTED BY 2,400+ BUSINESSES</span>
+      <span style="font-weight:700;color:var(--text-muted);font-size:0.8rem;letter-spacing:0.1em;">⭐ 4.9/5 Average Rating</span>
+      <span style="font-weight:700;color:var(--text-muted);font-size:0.8rem;letter-spacing:0.1em;">💰 ₦250M+ Sales Processed</span>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-title reveal"><h2>Everything You Need to Sell Smarter</h2><p>Automate your WhatsApp sales, delight customers, and close more deals.</p></div>
+      <div class="features-grid">
+        <div class="feature-card reveal"><div class="feature-icon">🤖</div><h3>AI Auto‑Reply</h3><p>Qwen AI answers every message in seconds. Speaks English, Pidgin, Yoruba, Igbo, Hausa.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon">📦</div><h3>Order Management</h3><p>Customers order via chat; SalesZap creates orders, collects addresses, and sends payment links.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon">💳</div><h3>Payments + Proof</h3><p>Accept Paystack, bank transfer, OPay, PalmPay. Manual proof upload for cash‑based customers.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon">📊</div><h3>CRM & Analytics</h3><p>See leads, follow‑ups, revenue, and satisfaction scores – all in one dashboard.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon">📣</div><h3>Broadcast Engine</h3><p>Send promos and updates to segmented lists – personalised with {name}.</p></div>
+        <div class="feature-card reveal"><div class="feature-icon">🔄</div><h3>Full Lifecycle</h3><p>From order → payment → shipping → delivery → satisfaction survey – automated.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works" style="background:var(--bg-secondary);">
+    <div class="container">
+      <div class="section-title reveal"><h2>Go Live in 10 Minutes</h2><p>Zero tech skills required – just follow these steps.</p></div>
+      <div class="steps">
+        <div class="step reveal"><h3>Sign Up & Connect</h3><p>Create your free account and link your WhatsApp Business number with one click.</p></div>
+        <div class="step reveal"><h3>Add Products</h3><p>Upload your catalog – SalesZap learns everything instantly.</p></div>
+        <div class="step reveal"><h3>Start Selling</h3><p>Your AI sales rep goes live. Orders, payments, and follow‑ups happen automatically.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="container">
+      <div class="section-title reveal"><h2>Simple, Transparent Pricing</h2><p>Start free. Upgrade when you need more.</p></div>
+      <div class="pricing-grid">
+        <div class="pricing-card reveal"><h3>Free</h3><div class="price">₦0</div><p style="color:var(--text-muted);">forever</p><ul style="list-style:none;margin:1.5rem 0;text-align:left;padding-left:1rem;"><li>✓ 70 AI replies/month</li><li>✓ 5 products</li><li>✓ 70 contacts</li><li>✗ Broadcasts</li></ul><a href="easy_signup.html" class="btn-secondary" style="width:100%;text-align:center;">Start Free</a></div>
+        <div class="pricing-card popular reveal"><div class="popular-badge">Most Popular</div><h3>Growth</h3><div class="price">₦14,999</div><p style="color:var(--text-muted);">per month</p><ul style="list-style:none;margin:1.5rem 0;text-align:left;padding-left:1rem;"><li>✓ 5,000 AI replies</li><li>✓ 300 products</li><li>✓ 10,000 contacts</li><li>✓ Broadcasts & CRM</li></ul><a href="easy_signup.html" class="btn-primary" style="width:100%;text-align:center;">Start Trial</a></div>
+        <div class="pricing-card reveal"><h3>Pro</h3><div class="price">₦34,999</div><p style="color:var(--text-muted);">per month</p><ul style="list-style:none;margin:1.5rem 0;text-align:left;padding-left:1rem;"><li>✓ Unlimited replies</li><li>✓ Unlimited products</li><li>✓ Priority support</li><li>✓ White‑label available</li></ul><a href="easy_signup.html" class="btn-secondary" style="width:100%;text-align:center;">Get Pro</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" style="background:var(--bg-secondary);">
+    <div class="container">
+      <div class="section-title reveal"><h2>Frequently Asked Questions</h2></div>
+      <div class="faq-list">
+        <div class="faq-item reveal"><button class="faq-question">Is SalesZap really free?<span class="faq-icon">▼</span></button><div class="faq-answer">Yes! The Free plan is forever – 70 replies/month, WhatsApp automation, orders, and payments. No credit card needed to start.</div></div>
+        <div class="faq-item reveal"><button class="faq-question">Do I need coding experience?<span class="faq-icon">▼</span></button><div class="faq-answer">None at all. SalesZap is built for non‑tech founders. Setup takes 10 minutes with simple copy‑paste steps.</div></div>
+        <div class="faq-item reveal"><button class="faq-question">Is it WhatsApp‑compliant?<span class="faq-icon">▼</span></button><div class="faq-answer">Yes. We use the official WhatsApp Cloud API. Follow our guidelines and you’re safe.</div></div>
+        <div class="faq-item reveal"><button class="faq-question">Can I sell digital products?<span class="faq-icon">▼</span></button><div class="faq-answer">Absolutely. Add download links and codes – they’re delivered instantly after payment.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="text-align:center;padding:4rem 1.5rem;">
+    <div class="container">
+      <h2 class="reveal">Ready to Zap Your Sales? 🚀</h2>
+      <p class="reveal" style="margin:1rem auto;">Join 2,400+ businesses already automating with SalesZap.</p>
+      <div class="reveal" style="margin-top:2rem;">
+        <a href="easy_signup.html" class="btn-primary">Start Your Free Trial →</a>
+        <p style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">No credit card required. 14‑day full access.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 SalesZap. Made with ❤️ for African entrepreneurs.</p>
+      <div style="margin-top:0.5rem;display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;">
+        <a href="#" style="color:var(--text-muted);text-decoration:none;">Privacy</a>
+        <a href="#" style="color:var(--text-muted);text-decoration:none;">Terms</a>
+        <a href="#" style="color:var(--text-muted);text-decoration:none;">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ─── THEME ──────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      const toggle = document.getElementById('themeToggle');
+      toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    })();
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      this.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // ─── MOBILE MENU ───────────────────────────────────────
+    const menuBtn = document.getElementById('mobileMenuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (menuBtn) {
+      menuBtn.style.display = 'block';
+      menuBtn.addEventListener('click', () => navLinks.classList.toggle('mobile'));
+      navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+        if (window.innerWidth <= 768) navLinks.classList.remove('mobile');
+      }));
+    }
+
+    // ─── SCROLL REVEAL ─────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // ─── FAQ ACCORDION ─────────────────────────────────────
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const item = this.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+    const firstFaq = document.querySelector('.faq-item');
+    if (firstFaq) firstFaq.classList.add('open');
+
+    // ─── URGENCY COUNTER ──────────────────────────────────
+    let spots = 47;
+    setInterval(() => {
+      if (Math.random() > 0.7 && spots > 20) {
+        spots--;
+        const el = document.querySelector('.hero .sub + div + div span:first-child');
+        if (el) el.textContent = `✅ ${spots} spots left this week`;
+      }
+    }, 30000);
+  </script>
+</body>
+</html>

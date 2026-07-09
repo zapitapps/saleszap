@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesZap • Start Free</title>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.7);
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-color: rgba(0, 0, 0, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.6);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --accent: #25d366;
+      --accent-dark: #128c7e;
+      --gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      --radius: 20px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --input-bg: rgba(255, 255, 255, 0.8);
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0b0f1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.8);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      --glass-bg: rgba(17, 24, 39, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(255, 255, 255, 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .logo {
+      text-align: center;
+      font-weight: 900;
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+    }
+    .logo span { color: var(--accent); }
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+    .form-group { margin-bottom: 1.2rem; }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    label .req { color: #ef4444; }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--bg-secondary); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .btn-primary {
+      width: 100%;
+      background: var(--gradient);
+      color: #fff;
+      font-weight: 700;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.4);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .message {
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: none;
+      font-size: 0.9rem;
+    }
+    .message.success { display: block; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+    .message.error { display: block; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    .message.info { display: block; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+    .plan-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .plan-option {
+      padding: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      background: var(--bg-secondary);
+    }
+    .plan-option:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .plan-option.selected {
+      border-color: var(--accent);
+      background: rgba(37, 211, 102, 0.05);
+      position: relative;
+    }
+    .plan-option.selected::after {
+      content: '✓';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--accent);
+      color: #fff;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .plan-option .name { font-weight: 800; font-size: 0.95rem; }
+    .plan-option .price { font-size: 1.3rem; font-weight: 900; color: var(--accent); margin: 0.2rem 0; }
+    .plan-option .price.free { color: var(--text-muted); }
+    .plan-option .desc { font-size: 0.7rem; color: var(--text-muted); }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    .theme-toggle {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+      backdrop-filter: blur(8px);
+    }
+    .theme-toggle:hover { background: var(--border-color); }
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .terms {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .terms a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 480px) {
+      .container { padding: 2rem 1.5rem; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .plan-selector { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+  <div class="container reveal">
+    <div class="logo">⚡Sales<span>Zap</span></div>
+    <p class="subtitle">Start your 14‑day free trial — no credit card required</p>
+
+    <div class="message" id="message"></div>
+
+    <form id="signupForm" autocomplete="off">
+      <!-- Plan Selection -->
+      <div class="form-group">
+        <label>Choose Your Plan</label>
+        <div class="plan-selector">
+          <div class="plan-option selected" data-plan="free" onclick="selectPlan('free')">
+            <div class="name">Free</div>
+            <div class="price free">₦0</div>
+            <div class="desc">70 replies/month</div>
+          </div>
+          <div class="plan-option" data-plan="starter" onclick="selectPlan('starter')">
+            <div class="name">Starter</div>
+            <div class="price">₦5,999</div>
+            <div class="desc">1,000 replies</div>
+          </div>
+          <div class="plan-option" data-plan="growth" onclick="selectPlan('growth')">
+            <div class="name">Growth ⭐</div>
+            <div class="price">₦14,999</div>
+            <div class="desc">5,000 replies + CRM</div>
+          </div>
+          <div class="plan-option" data-plan="pro" onclick="selectPlan('pro')">
+            <div class="name">Pro</div>
+            <div class="price">₦34,999</div>
+            <div class="desc">Unlimited + Support</div>
+          </div>
+        </div>
+        <input type="hidden" id="selectedPlan" value="free" />
+      </div>
+
+      <!-- Business Details -->
+      <div class="form-group">
+        <label>Business Name <span class="req">*</span></label>
+        <input type="text" id="businessName" placeholder="e.g., Amara Fashion, TechHub Lagos" required />
+      </div>
+
+      <div class="form-group">
+        <label>Business Category <span class="req">*</span></label>
+        <select id="businessCategory" required>
+          <option value="">-- Select your type --</option>
+          <option value="fashion">👗 Fashion & Clothing</option>
+          <option value="food">🍔 Food & Catering</option>
+          <option value="tech">💻 Tech & Electronics</option>
+          <option value="beauty">✨ Beauty & Skincare</option>
+          <option value="health">💊 Health & Wellness</option>
+          <option value="services">🔧 Services</option>
+          <option value="education">📚 Education</option>
+          <option value="agric">🌾 Agriculture</option>
+          <option value="other">📦 Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>What do you sell? <span class="req">*</span></label>
+        <textarea id="businessDesc" placeholder="Brief description of your products or services" required></textarea>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>City <span class="req">*</span></label>
+          <input type="text" id="city" placeholder="e.g., Lagos, Abuja" required />
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="state" placeholder="e.g., Lagos State" />
+        </div>
+      </div>
+
+      <!-- Contact Details -->
+      <div class="form-group">
+        <label>WhatsApp Number <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="+2348012345678" required />
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Include your country code (e.g., +234 for Nigeria)</p>
+      </div>
+
+      <div class="form-group">
+        <label>Username <span class="req">*</span></label>
+        <input type="text" id="username" placeholder="e.g., amarafashion" required />
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">3‑30 characters, letters/numbers/underscores only</p>
+      </div>
+
+      <div class="form-group">
+        <label>Email Address <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="you@example.com" required />
+      </div>
+
+      <div class="form-group">
+        <label>Password <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="At least 8 characters" required />
+      </div>
+
+      <div class="form-group" id="refCodeField">
+        <label>Referral Code (optional)</label>
+        <input type="text" id="referralCode" placeholder="e.g., VND-A1B2C3" />
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Got a referral code? Enter it here for bonus rewards!</p>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">🚀 Create My SalesZap Bot →</button>
+
+      <div class="terms">
+        By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        No spam. Unsubscribe anytime.
+      </div>
+    </form>
+
+    <div class="footer-links">
+      <a href="login.html">Already have an account? Log in →</a>
+    </div>
+  </div>
+
+  <script>
+    // ─── THEME ──────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    })();
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      this.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // ─── PLAN SELECTION ──────────────────────────────────────
+    function selectPlan(plan) {
+      document.querySelectorAll('.plan-option').forEach(el => el.classList.remove('selected'));
+      document.querySelector(`.plan-option[data-plan="${plan}"]`).classList.add('selected');
+      document.getElementById('selectedPlan').value = plan;
+    }
+
+    // ─── CONFIG ──────────────────────────────────────────────
+    const BACKEND_URL = 'https://vendrai-api.onrender.com';
+    const messageEl = document.getElementById('message');
+
+    function showMessage(text, type = 'info') {
+      messageEl.textContent = text;
+      messageEl.className = 'message ' + type;
+    }
+
+    function hideMessage() {
+      messageEl.className = 'message';
+    }
+
+    // ─── SIGNUP ──────────────────────────────────────────────
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMessage();
+
+      const businessName = document.getElementById('businessName').value.trim();
+      const businessCategory = document.getElementById('businessCategory').value;
+      const businessDesc = document.getElementById('businessDesc').value.trim();
+      const city = document.getElementById('city').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const referralCode = document.getElementById('referralCode').value.trim();
+      const plan = document.getElementById('selectedPlan').value;
+
+      // Validation
+      if (!businessName || !businessCategory || !businessDesc || !city || !phone || !username || !email || !password) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
+        showMessage('Username: 3‑30 characters, letters/numbers/underscores only.', 'error');
+        return;
+      }
+      if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+        showMessage('Phone: include country code (e.g., +2348012345678).', 'error');
+        return;
+      }
+      if (!email.includes('@') || !email.includes('.')) {
+        showMessage('Please enter a valid email address.', 'error');
+        return;
+      }
+      if (password.length < 8) {
+        showMessage('Password must be at least 8 characters.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Creating your bot...';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username,
+            email,
+            phone,
+            password,
+            businessName,
+            referralCode: referralCode || null,
+            // Additional fields for onboarding
+            businessCategory,
+            businessDesc,
+            city,
+            state
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.setItem('vendr_token', data.session_token);
+          localStorage.setItem('vendr_biz_id', data.business.id);
+          localStorage.setItem('vendr_email', data.business.email);
+
+          showMessage('🎉 Account created successfully! Redirecting to dashboard...', 'success');
+          setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        } else {
+          showMessage(data.error || 'Registration failed. Please try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = '🚀 Create My SalesZap Bot →';
+        }
+      } catch (err) {
+        showMessage('Could not connect to server. Please check your internet.', 'error');
+        btn.disabled = false;
+        btn.textContent = '🚀 Create My SalesZap Bot →';
+      }
+    });
+
+    // ─── CHECK FOR REFERRAL CODE IN URL ──────────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      document.getElementById('referralCode').value = refCode;
+      showMessage('🎁 Referral code applied! You get bonus rewards.', 'info');
+    }
+
+    // ─── ENTER KEY SUPPORT ──────────────────────────────────
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const form = document.getElementById('signupForm');
+        if (form) form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // ─── INIT ──────────────────────────────────────────────────
+    // Auto-select free plan by default
+    selectPlan('free');
+  </script>
+</body>
+</html>
