@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalesZap • Verify Email</title>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255,255,255,0.7);
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-color: rgba(0,0,0,0.06);
+      --shadow: 0 8px 30px rgba(0,0,0,0.05);
+      --glass-bg: rgba(255,255,255,0.6);
+      --glass-border: rgba(255,255,255,0.2);
+      --accent: #25d366;
+      --gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      --radius: 20px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --input-bg: rgba(255,255,255,0.8);
+    }
+    [data-theme="dark"] {
+      --bg-primary: #0b0f1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17,24,39,0.8);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border-color: rgba(255,255,255,0.06);
+      --shadow: 0 8px 30px rgba(0,0,0,0.4);
+      --glass-bg: rgba(17,24,39,0.7);
+      --glass-border: rgba(255,255,255,0.08);
+      --input-bg: rgba(255,255,255,0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .logo { text-align: center; font-weight: 900; font-size: 2rem; margin-bottom: 0.3rem; }
+    .logo span { color: var(--accent); }
+    .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    label { display: block; font-weight: 600; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+    input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.5em;
+      font-weight: 700;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+    }
+    .btn-primary {
+      width: 100%;
+      background: var(--gradient);
+      color: #fff;
+      font-weight: 700;
+      padding: 0.9rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(37, 211, 102, 0.25);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.4);
+    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-secondary {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 0.8rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      margin-top: 0.8rem;
+    }
+    .btn-secondary:hover { background: var(--border-color); }
+    .message {
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: none;
+      font-size: 0.9rem;
+    }
+    .message.success { display: block; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+    .message.error { display: block; background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      gap: 1.5rem;
+    }
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--accent); }
+    .theme-toggle {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+      backdrop-filter: blur(8px);
+    }
+    .theme-toggle:hover { background: var(--border-color); }
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+    .resend-text { text-align: center; margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); }
+    .resend-text a { color: var(--accent); text-decoration: none; cursor: pointer; }
+    .resend-text a:hover { text-decoration: underline; }
+    @media (max-width: 480px) { .container { padding: 2rem 1.5rem; } }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+  <div class="container reveal">
+    <div class="logo">⚡Sales<span>Zap</span></div>
+    <p class="subtitle">Verify your email to access your dashboard</p>
+
+    <div class="message" id="message"></div>
+
+    <div class="form-group">
+      <label for="otp">Enter the 6‑digit code sent to your email</label>
+      <input type="text" id="otp" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" />
+    </div>
+
+    <button class="btn-primary" id="verifyBtn">Verify Email →</button>
+
+    <div class="resend-text">
+      Didn't receive the code? <a id="resendBtn">Click here to resend</a>
+    </div>
+
+    <div class="footer-links">
+      <a href="login.html">← Back to Login</a>
+      <a href="dashboard.html">Skip for now (not recommended)</a>
+    </div>
+  </div>
+
+  <script>
+    // ─── THEME ──────────────────────────────────────────────
+    (function initTheme() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    })();
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      this.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // ─── CONFIG ──────────────────────────────────────────────
+    const BACKEND_URL = 'https://vendrai-api.onrender.com';
+    const TOKEN = localStorage.getItem('vendr_token') || '';
+    if (!TOKEN) { window.location.href = 'login.html'; }
+
+    const messageEl = document.getElementById('message');
+
+    function showMessage(text, type = 'success') {
+      messageEl.textContent = text;
+      messageEl.className = 'message ' + type;
+    }
+
+    function hideMessage() {
+      messageEl.className = 'message';
+    }
+
+    // ─── VERIFY OTP ──────────────────────────────────────────
+    document.getElementById('verifyBtn').addEventListener('click', async () => {
+      const otp = document.getElementById('otp').value.trim();
+      if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+        showMessage('Please enter the 6‑digit code.', 'error');
+        return;
+      }
+      hideMessage();
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Verifying...';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/auth/verify-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN },
+          body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showMessage('✅ Email verified! Redirecting to dashboard...', 'success');
+          setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        } else {
+          showMessage(data.error || 'Verification failed. Please try again.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Verify Email →';
+        }
+      } catch (err) {
+        showMessage('Could not connect to server. Please check your internet.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Verify Email →';
+      }
+    });
+
+    // ─── RESEND OTP ──────────────────────────────────────────
+    document.getElementById('resendBtn').addEventListener('click', async () => {
+      hideMessage();
+      const btn = document.getElementById('resendBtn');
+      btn.textContent = '⏳ Sending...';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/auth/resend-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showMessage('✅ New code sent to your email. Check your inbox.', 'success');
+        } else {
+          showMessage(data.error || 'Failed to resend. Please try again.', 'error');
+        }
+      } catch (err) {
+        showMessage('Could not connect to server.', 'error');
+      }
+      btn.textContent = 'Click here to resend';
+      btn.style.pointerEvents = 'auto';
+    });
+
+    // ─── ENTER KEY SUPPORT ──────────────────────────────────
+    document.getElementById('otp').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('verifyBtn').click();
+    });
+
+    // ─── INIT ──────────────────────────────────────────────────
+    // Auto-focus OTP input
+    document.getElementById('otp').focus();
+  </script>
+</body>
+</html>
