@@ -49,7 +49,10 @@ const WATERMARK = `\n\n_Powered by SalesZap_ ⚡ | ${process.env.FRONTEND_URL ||
 const TAGLINE = "The WhatsApp Commerce OS for African SMEs";
 const HF_MODEL  = "Qwen/Qwen2.5-72B-Instruct";
 const HF_API    = "https://router.huggingface.co/v1/chat/completions";
-
+// ─── BSP PROVIDER CONFIG ──────────────────────────────────────
+const BSP_PROVIDER = process.env.BSP_PROVIDER || '360dialog';
+const BSP_API_KEY = process.env.BSP_API_KEY || '';
+const BSP_BASE_URL = process.env.BSP_BASE_URL || 'https://api.360dialog.com/v1';
 // ============================================================
 // MESSAGE QUEUE (60 msg/sec)
 // ============================================================
@@ -450,7 +453,73 @@ async function notifySubscriber(businessId, message) {
     if (phoneId && token) await sendWA(phoneId, token, phone, message);
   } catch(e) {}
 }
+// ─── BSP CONNECT WHATSAPP ──────────────────────────────────────
+async function connectWhatsAppViaBSP(businessId, phoneNumber, redirectUrl) {
+  if (!BSP_API_KEY) {
+    return { 
+      success: false, 
+      error: 'BSP_API_KEY not configured. Please add it to Render environment variables.' 
+    };
+  }
 
+  try {
+    // Different BSPs have different APIs – we'll use 360dialog as the primary
+    let payload = {
+      phoneNumber: phoneNumber,
+      redirectUrl: redirectUrl || `${process.env.FRONTEND_URL}/dashboard.html?whatsapp=connected`
+    };
+
+    let endpoint = `${BSP_BASE_URL}/whatsapp/connect`;
+    
+    // For 360dialog – they use a different endpoint for embedded signup
+    if (BSP_PROVIDER === '360dialog') {
+      // 360dialog uses a redirect-based flow with a session token
+      // We'll generate a session token and store it
+      const sessionToken = crypto.randomBytes(32).toString('hex');
+      await supabase.from('whatsapp_connections').insert({
+        business_id: businessId,
+        phone_number: phoneNumber,
+        session_token: sessionToken,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      });
+      
+      // Build the 360dialog embedded signup URL
+      // Note: You'll need to get the actual endpoint from 360dialog docs
+      const signupUrl = `${BSP_BASE_URL}/embed/signup?phone=${phoneNumber}&session=${sessionToken}&callback=${encodeURIComponent(process.env.BACKEND_URL + '/webhook/bsp/callback')}`;
+      
+      return {
+        success: true,
+        method: 'redirect',
+        redirectUrl: signupUrl,
+        sessionToken: sessionToken,
+        message: 'Click the link to connect your WhatsApp number via 360dialog.'
+      };
+    }
+
+    // For other BSPs (Twilio, MessageBird, etc.)
+    const response = await axios.post(endpoint, payload, {
+      headers: {
+        'Authorization': `Bearer ${BSP_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    return {
+      success: true,
+      method: 'api',
+      data: response.data
+    };
+
+  } catch (error) {
+    console.error('BSP connect error:', error.message);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message
+    };
+  }
+}
 // ============================================================
 // AUTH MIDDLEWARE
 // ============================================================
@@ -3311,7 +3380,95 @@ app.get("/", (req, res) => {
     website: process.env.FRONTEND_URL || "https://zapitapps.github.io/saleszap"
   });
 });
+// ─── BSP WEBHOOK CALLBACK ──────────────────────────────────────
+app.post("/webhook/bsp/callback", express.raw({ type: "application/json" }), async (req, res) => {
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    
+    console.log('📞 BSP Callback received:', body);
 
+    // Different BSPs send different payloads
+    const sessionToken = body.sessionToken || body.session || body.session_id;
+    const phoneNumberId = body.phoneNumberId || body.wa_phone_id || body.phone_number_id;
+    const accessToken = body.accessToken || body.wa_access_token || body.access_token;
+    const businessId = body.businessId || body.business_id;
+
+    // If we have a session token, look up the business
+    if (sessionToken) {
+      const { data: connection } = await supabase
+        .from('whatsapp_connections')
+        .select('business_id, phone_number')
+        .eq('session_token', sessionToken)
+        .eq('status', 'pending')
+        .single();
+
+      if (connection) {
+        // Save the credentials to business_settings
+        await supabase.from('business_settings')
+          .update({
+            wa_phone_id: phoneNumberId,
+            wa_access_token: accessToken,
+            wa_business_id: body.businessId || body.wa_business_id || null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('business_id', connection.business_id);
+
+        // Mark the connection as completed
+        await supabase.from('whatsapp_connections')
+          .update({
+            status: 'completed',
+            wa_phone_id: phoneNumberId,
+            completed_at: new Date().toISOString()
+          })
+          .eq('session_token', sessionToken);
+
+        // Notify the business owner
+        await notifySubscriber(connection.business_id,
+          `✅ *WhatsApp Connected!*\n\nYour number ${connection.phone_number} is now connected to SalesZap.\n\nYou can now receive customer messages directly on your number! 🎉`
+        );
+
+        return res.send(`
+          <html><body style="font-family:Arial;text-align:center;padding:40px;background:#0B0F1A;color:#F8FAFC;">
+            <div style="max-width:400px;margin:0 auto;background:#111827;padding:40px;border-radius:16px;">
+              <h1 style="color:#25D366;">✅ WhatsApp Connected!</h1>
+              <p>Your number is now connected to SalesZap.</p>
+              <p style="color:#94A3B8;font-size:0.9rem;">You can close this window and return to your dashboard.</p>
+              <a href="${process.env.FRONTEND_URL}/dashboard.html" style="display:inline-block;margin-top:20px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;padding:12px 30px;border-radius:30px;text-decoration:none;font-weight:700;">Go to Dashboard →</a>
+            </div>
+          </body></html>
+        `);
+      }
+    }
+
+    // If we have a business ID directly (some BSPs send it)
+    if (businessId && phoneNumberId && accessToken) {
+      await supabase.from('business_settings')
+        .update({
+          wa_phone_id: phoneNumberId,
+          wa_access_token: accessToken,
+          wa_business_id: body.wa_business_id || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('business_id', businessId);
+
+      // Also update the businesses table
+      await supabase.from('businesses')
+        .update({
+          whatsapp_number: body.phoneNumber || body.phone_number || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', businessId);
+
+      return res.status(200).json({ success: true, message: 'WhatsApp connected successfully!' });
+    }
+
+    res.status(400).json({ error: 'Missing required data in callback.' });
+
+  } catch (error) {
+    console.error('BSP callback error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 app.use((req,res) => res.status(404).json({ error:"Route not found", path:req.path }));
 app.use((err,req,res,next) => { console.error("💥", err.message); res.status(500).json({ error:"Internal server error" }); });
 
