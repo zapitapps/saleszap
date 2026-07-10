@@ -22,6 +22,7 @@
       --gradient: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
       --radius: 16px;
       --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --input-bg: rgba(255, 255, 255, 0.8);
     }
     [data-theme="dark"] {
       --bg-primary: #0b0f1a;
@@ -35,6 +36,7 @@
       --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
       --glass-bg: rgba(17, 24, 39, 0.7);
       --glass-border: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(255, 255, 255, 0.05);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -62,6 +64,7 @@
     .sidebar .logo span { color: var(--accent); }
     .sidebar .user-info { padding: 0.8rem 1.5rem; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
     .sidebar .user-info .name { color: var(--text-primary); font-weight: 600; }
+    .sidebar .user-info .plan { font-size: 0.7rem; background: var(--accent); color: #fff; padding: 0.15rem 0.6rem; border-radius: 20px; }
     .sidebar nav { padding: 0.8rem; flex: 1; }
     .slink {
       display: block;
@@ -196,23 +199,13 @@
     .payment-bar .item .badge { padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.65rem; font-weight: 700; }
     .badge-connected { background: #10b981; color: #fff; }
     .badge-disconnected { background: #ef4444; color: #fff; }
+    .badge-pending { background: #f59e0b; color: #111827; }
     .reveal {
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.6s ease, transform 0.6s ease;
     }
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    @media (max-width: 768px) {
-      .sidebar { width: 200px; }
-      .main { margin-left: 200px; padding: 1rem; }
-    }
-    @media (max-width: 600px) {
-      .sidebar { width: 100%; position: relative; height: auto; border-right: none; }
-      .main { margin-left: 0; }
-    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
     .verification-banner {
       background: #f59e0b;
       color: #111827;
@@ -225,7 +218,41 @@
       flex-wrap: wrap;
       gap: 0.5rem;
     }
-    .verification-banner a { color: #111827; font-weight: 700; text-decoration: underline; }
+    .verification-banner a { color: #111827; font-weight: 700; text-decoration: underline; cursor: pointer; }
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .input-group input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.6rem 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.15);
+    }
+    .status-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+    .status-row .label { font-weight: 600; color: var(--text-muted); }
+    .status-row .value { font-weight: 700; }
+    @media (max-width: 768px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; padding: 1rem; }
+    }
+    @media (max-width: 600px) {
+      .sidebar { width: 100%; position: relative; height: auto; border-right: none; }
+      .main { margin-left: 0; }
+      .payment-bar { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
@@ -233,7 +260,7 @@
     <div class="logo">⚡Sales<span>Zap</span></div>
     <div class="user-info">
       <span class="name" id="sidebarUser">Loading...</span>
-      <span id="sidebarPlan" style="font-size:0.7rem; background:var(--accent); color:#fff; padding:0.15rem 0.5rem; border-radius:20px;">FREE</span>
+      <span class="plan" id="sidebarPlan">FREE</span>
     </div>
     <nav>
       <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);padding:0.4rem 0.8rem;">Main</div>
@@ -268,16 +295,16 @@
     <div class="payment-bar" id="paymentBar">
       <div class="item"><span class="label">💳 Paystack:</span><span class="value" id="paystackStatus"><span class="badge badge-disconnected">Not Connected</span></span></div>
       <div class="item"><span class="label">🏦 Bank Details:</span><span class="value" id="bankStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
-      <div class="item"><span class="label">📱 OPay/PalmPay:</span><span class="value" id="mobileMoneyStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
-      <div class="item" style="margin-left:auto;"><button onclick="window.location.href='settings.html'" class="btn-o btn-sm">⚙️ Manage Payments</button></div>
+      <div class="item"><span class="label">📱 Mobile Money:</span><span class="value" id="mobileMoneyStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
+      <div class="item" style="margin-left:auto;"><button onclick="showSection('settings')" class="btn-o btn-sm">⚙️ Manage</button></div>
     </div>
 
-    <!-- Verification Banner (hidden if verified) -->
+    <!-- Verification Banner -->
     <div id="verificationBanner" class="verification-banner" style="display:none;">
-      ⚠️ Your email is not verified. Please <a href="#" onclick="resendOTP()">click here</a> to resend the verification code, or <a href="verify-email.html">verify now</a>.
+      ⚠️ Your email is not verified. Please <a onclick="resendOTP()">click here</a> to resend the verification code.
     </div>
 
-    <!-- Overview -->
+    <!-- Overview Section -->
     <div id="overviewSection">
       <div class="stat-grid reveal" id="statsGrid">
         <div class="stat-box"><div class="label">Total Orders</div><div class="value" id="stat-orders">-</div></div>
@@ -299,7 +326,7 @@
       </div>
     </div>
 
-    <!-- Orders -->
+    <!-- Orders Section -->
     <div id="ordersSection" style="display:none;">
       <div class="card reveal">
         <h3>📦 Orders</h3>
@@ -308,12 +335,12 @@
       </div>
     </div>
 
-    <!-- Pipeline -->
+    <!-- Pipeline Section -->
     <div id="pipelineSection" style="display:none;">
       <div class="card reveal"><h3>💼 Sales Pipeline</h3><div id="pipelineContent">Loading...</div></div>
     </div>
 
-    <!-- Referrals -->
+    <!-- Referrals Section -->
     <div id="referralsSection" style="display:none;">
       <div class="card reveal">
         <h3>🤝 Referrals</h3>
@@ -329,17 +356,17 @@
       </div>
     </div>
 
-    <!-- Products -->
+    <!-- Products Section -->
     <div id="productsSection" style="display:none;">
       <div class="card reveal"><h3>🛍️ Products</h3><div id="productsList">Loading...</div></div>
     </div>
 
-    <!-- Knowledge Base -->
+    <!-- Knowledge Base Section -->
     <div id="kbSection" style="display:none;">
       <div class="card reveal"><h3>📚 Knowledge Base</h3><div id="kbList">Loading...</div></div>
     </div>
 
-    <!-- Broadcast -->
+    <!-- Broadcast Section -->
     <div id="broadcastSection" style="display:none;">
       <div class="card reveal">
         <h3>📣 Broadcast</h3>
@@ -352,9 +379,44 @@
       </div>
     </div>
 
-    <!-- Settings -->
+    <!-- Settings Section – Includes WhatsApp Connect -->
     <div id="settingsSection" style="display:none;">
-      <div class="card reveal"><h3>⚙️ Settings</h3><div id="settingsContent">Loading...</div></div>
+      <div class="card reveal">
+        <h3>⚙️ Settings</h3>
+        <div id="settingsContent">Loading...</div>
+      </div>
+
+      <!-- WhatsApp Connect Card -->
+      <div class="card reveal">
+        <h4>📱 WhatsApp Connection</h4>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;">
+          Connect your own WhatsApp number to receive messages directly. No Meta App required – just scan a QR code.
+        </p>
+
+        <!-- Current Status -->
+        <div class="status-row" id="whatsappStatusRow">
+          <span class="label">Status:</span>
+          <span class="value" id="whatsappStatusValue" style="color:var(--text-muted);">Checking...</span>
+        </div>
+
+        <!-- Connect Form -->
+        <div id="whatsappConnectForm" style="margin-top:0.8rem;">
+          <div class="input-group">
+            <input type="tel" id="whatsappPhoneInput" placeholder="+2348012345678" />
+            <button onclick="connectWhatsApp()" class="btn-g" id="connectWhatsAppBtn">🔗 Connect Number</button>
+          </div>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;">
+            Include country code. Example: +2348012345678
+          </p>
+        </div>
+
+        <!-- Disconnect Button -->
+        <div id="whatsappDisconnectForm" style="display:none;margin-top:0.8rem;">
+          <button onclick="disconnectWhatsApp()" class="btn-o" style="border-color:#ef4444;color:#ef4444;">🔌 Disconnect Number</button>
+        </div>
+
+        <div id="whatsappMessage" style="margin-top:0.8rem;font-size:0.85rem;display:none;"></div>
+      </div>
     </div>
   </main>
 
@@ -396,7 +458,16 @@
       return res.json();
     }
 
-    // ─── LOAD USER INFO & PAYMENT STATUS ──────────────────────
+    function showMessage(id, text, type = 'success') {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.style.display = 'block';
+      el.style.color = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#f59e0b');
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    // ─── LOAD USER INFO ──────────────────────────────────────
     async function loadUserInfo() {
       try {
         const data = await apiFetch('/auth/me');
@@ -409,7 +480,7 @@
           window.currentBusiness = biz;
           window.currentSettings = settings;
 
-          // Check email verification
+          // Email verification
           if (biz.email_verified === false) {
             document.getElementById('verificationBanner').style.display = 'flex';
           } else {
@@ -439,9 +510,114 @@
           } else {
             mobileMoneyStatus.innerHTML = '<span class="badge badge-disconnected">Not Set</span>';
           }
+
+          // WhatsApp connection status
+          updateWhatsAppStatus(settings);
         }
       } catch (e) {
         console.error('Failed to load user info:', e);
+      }
+    }
+
+    // ─── WHATSAPP CONNECTION UI ──────────────────────────────
+    function updateWhatsAppStatus(settings) {
+      const statusEl = document.getElementById('whatsappStatusValue');
+      const connectForm = document.getElementById('whatsappConnectForm');
+      const disconnectForm = document.getElementById('whatsappDisconnectForm');
+
+      if (settings?.wa_phone_id) {
+        statusEl.textContent = `✅ Connected (${settings.wa_phone_id})`;
+        statusEl.style.color = '#10b981';
+        connectForm.style.display = 'none';
+        disconnectForm.style.display = 'block';
+      } else if (settings?.wa_phone_id === null || settings?.wa_phone_id === undefined) {
+        statusEl.textContent = '❌ Not Connected';
+        statusEl.style.color = '#ef4444';
+        connectForm.style.display = 'block';
+        disconnectForm.style.display = 'none';
+      } else {
+        statusEl.textContent = '⏳ Checking...';
+        statusEl.style.color = '#f59e0b';
+        connectForm.style.display = 'block';
+        disconnectForm.style.display = 'none';
+      }
+    }
+
+    // ─── CONNECT WHATSAPP ──────────────────────────────────────
+    async function connectWhatsApp() {
+      const phoneInput = document.getElementById('whatsappPhoneInput');
+      const phoneNumber = phoneInput.value.trim();
+      const btn = document.getElementById('connectWhatsAppBtn');
+      const msgEl = document.getElementById('whatsappMessage');
+
+      if (!phoneNumber) {
+        showMessage('whatsappMessage', '⚠️ Please enter your phone number.', 'error');
+        return;
+      }
+
+      if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+        showMessage('whatsappMessage', '⚠️ Please include country code. Example: +2348012345678', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Connecting...';
+      msgEl.style.display = 'none';
+
+      try {
+        const data = await apiFetch('/dashboard/connect-whatsapp', {
+          method: 'POST',
+          body: JSON.stringify({ phoneNumber })
+        });
+
+        if (data.success) {
+          if (data.method === 'redirect' && data.redirectUrl) {
+            showMessage('whatsappMessage', '✅ Redirecting to connect your WhatsApp...', 'success');
+            // Open in new tab or redirect
+            window.open(data.redirectUrl, '_blank');
+            // Poll for connection status
+            setTimeout(() => {
+              loadUserInfo();
+              btn.disabled = false;
+              btn.textContent = '🔗 Connect Number';
+            }, 5000);
+          } else {
+            showMessage('whatsappMessage', '✅ WhatsApp connected successfully!', 'success');
+            loadUserInfo();
+            btn.disabled = false;
+            btn.textContent = '🔗 Connect Number';
+          }
+        } else {
+          showMessage('whatsappMessage', '❌ ' + (data.error || 'Connection failed.'), 'error');
+          btn.disabled = false;
+          btn.textContent = '🔗 Connect Number';
+        }
+      } catch (e) {
+        showMessage('whatsappMessage', '❌ Network error. Please try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = '🔗 Connect Number';
+      }
+    }
+
+    // ─── DISCONNECT WHATSAPP ──────────────────────────────────
+    async function disconnectWhatsApp() {
+      if (!confirm('Are you sure you want to disconnect your WhatsApp number? You will stop receiving messages on this number.')) return;
+
+      const msgEl = document.getElementById('whatsappMessage');
+
+      try {
+        const data = await apiFetch('/dashboard/disconnect-whatsapp', {
+          method: 'POST'
+        });
+
+        if (data.success) {
+          showMessage('whatsappMessage', '✅ WhatsApp number disconnected successfully.', 'success');
+          loadUserInfo();
+        } else {
+          showMessage('whatsappMessage', '❌ ' + (data.error || 'Disconnection failed.'), 'error');
+        }
+      } catch (e) {
+        showMessage('whatsappMessage', '❌ Network error. Please try again.', 'error');
       }
     }
 
@@ -785,9 +961,6 @@
             <div><strong>Paystack Connected:</strong> ${settings.paystack_secret ? '✅' : '❌'}</div>
             <div><strong>Bank Details:</strong> ${settings.bank_details ? '✅ Set' : '❌ Not Set'}</div>
           </div>
-          <div style="margin-top:16px;">
-            <button onclick="window.location.href='settings.html'" class="btn-o">Edit Settings</button>
-          </div>
         `;
         container.innerHTML = html;
       } catch(e) {
@@ -846,6 +1019,8 @@
     window.loadBroadcastHistory = loadBroadcastHistory;
     window.loadSettings = loadSettings;
     window.resendOTP = resendOTP;
+    window.connectWhatsApp = connectWhatsApp;
+    window.disconnectWhatsApp = disconnectWhatsApp;
   </script>
 </body>
 </html>
