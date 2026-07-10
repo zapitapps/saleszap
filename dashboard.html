@@ -60,6 +60,8 @@
     }
     .sidebar .logo { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color); font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; }
     .sidebar .logo span { color: var(--accent); }
+    .sidebar .user-info { padding: 0.8rem 1.5rem; font-size: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .sidebar .user-info .name { color: var(--text-primary); font-weight: 600; }
     .sidebar nav { padding: 0.8rem; flex: 1; }
     .slink {
       display: block;
@@ -178,6 +180,22 @@
       border: 1px solid var(--border-color);
     }
     .order-row .flex { margin-top: 0.5rem; }
+    .payment-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.2rem;
+    }
+    .payment-bar .item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    .payment-bar .item .label { color: var(--text-muted); font-weight: 600; }
+    .payment-bar .item .value { color: var(--text-primary); font-weight: 700; }
+    .payment-bar .item .badge { padding: 0.2rem 0.6rem; border-radius: 30px; font-size: 0.65rem; font-weight: 700; }
+    .badge-connected { background: #10b981; color: #fff; }
+    .badge-disconnected { background: #ef4444; color: #fff; }
     .reveal {
       opacity: 0;
       transform: translateY(20px);
@@ -195,11 +213,28 @@
       .sidebar { width: 100%; position: relative; height: auto; border-right: none; }
       .main { margin-left: 0; }
     }
+    .verification-banner {
+      background: #f59e0b;
+      color: #111827;
+      padding: 0.8rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .verification-banner a { color: #111827; font-weight: 700; text-decoration: underline; }
   </style>
 </head>
 <body>
   <aside class="sidebar">
     <div class="logo">⚡Sales<span>Zap</span></div>
+    <div class="user-info">
+      <span class="name" id="sidebarUser">Loading...</span>
+      <span id="sidebarPlan" style="font-size:0.7rem; background:var(--accent); color:#fff; padding:0.15rem 0.5rem; border-radius:20px;">FREE</span>
+    </div>
     <nav>
       <div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);padding:0.4rem 0.8rem;">Main</div>
       <a onclick="showSection('overview')" class="slink active" id="nav-overview">📊 Overview</a>
@@ -227,6 +262,19 @@
     <div class="header">
       <div><h1 id="pageTitle">Dashboard</h1><span class="sub" id="pageSub">Overview</span></div>
       <button onclick="refreshAll()" class="btn-o">🔄 Refresh</button>
+    </div>
+
+    <!-- Payment / Settings Bar -->
+    <div class="payment-bar" id="paymentBar">
+      <div class="item"><span class="label">💳 Paystack:</span><span class="value" id="paystackStatus"><span class="badge badge-disconnected">Not Connected</span></span></div>
+      <div class="item"><span class="label">🏦 Bank Details:</span><span class="value" id="bankStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
+      <div class="item"><span class="label">📱 OPay/PalmPay:</span><span class="value" id="mobileMoneyStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
+      <div class="item" style="margin-left:auto;"><button onclick="window.location.href='settings.html'" class="btn-o btn-sm">⚙️ Manage Payments</button></div>
+    </div>
+
+    <!-- Verification Banner (hidden if verified) -->
+    <div id="verificationBanner" class="verification-banner" style="display:none;">
+      ⚠️ Your email is not verified. Please <a href="#" onclick="resendOTP()">click here</a> to resend the verification code, or <a href="verify-email.html">verify now</a>.
     </div>
 
     <!-- Overview -->
@@ -334,32 +382,121 @@
 
     // ─── HELPERS ──────────────────────────────────────────────
     async function apiFetch(endpoint, options = {}) {
-      const headers = { 'Content-Type': 'application/json', 'x-session-token': TOKEN, ...(options.headers||{}) };
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-session-token': TOKEN,
+        ...(options.headers || {})
+      };
       const res = await fetch(`${BACKEND_URL}${endpoint}`, { ...options, headers });
-      if (res.status === 401) { localStorage.removeItem('vendr_token'); window.location.href = 'login.html'; throw new Error('Session expired'); }
+      if (res.status === 401) {
+        localStorage.removeItem('vendr_token');
+        window.location.href = 'login.html';
+        throw new Error('Session expired');
+      }
       return res.json();
     }
 
-    // ─── CHECK ADMIN ──────────────────────────────────────────
-    async function checkAdmin() {
+    // ─── LOAD USER INFO & PAYMENT STATUS ──────────────────────
+    async function loadUserInfo() {
       try {
-        const data = await apiFetch('/admin/me');
-        if (data.success) document.getElementById('nav-admin').style.display = 'block';
-      } catch(e) {}
+        const data = await apiFetch('/auth/me');
+        if (data.success) {
+          const biz = data.business;
+          const settings = data.business.settings || {};
+          document.getElementById('sidebarUser').textContent = `@${biz.username}`;
+          document.getElementById('sidebarPlan').textContent = biz.plan.toUpperCase();
+          document.title = `SalesZap • ${biz.business_name || 'Dashboard'}`;
+          window.currentBusiness = biz;
+          window.currentSettings = settings;
+
+          // Check email verification
+          if (biz.email_verified === false) {
+            document.getElementById('verificationBanner').style.display = 'flex';
+          } else {
+            document.getElementById('verificationBanner').style.display = 'none';
+          }
+
+          // Payment bar
+          const paystackStatus = document.getElementById('paystackStatus');
+          const bankStatus = document.getElementById('bankStatus');
+          const mobileMoneyStatus = document.getElementById('mobileMoneyStatus');
+
+          if (settings.paystack_secret) {
+            paystackStatus.innerHTML = '<span class="badge badge-connected">Connected</span>';
+          } else {
+            paystackStatus.innerHTML = '<span class="badge badge-disconnected">Not Connected</span>';
+          }
+
+          const bankDetails = settings.bank_details || {};
+          if (bankDetails.bank_name || bankDetails.account_number || bankDetails.bank_accounts?.length) {
+            bankStatus.innerHTML = '<span class="badge badge-connected">Set</span>';
+          } else {
+            bankStatus.innerHTML = '<span class="badge badge-disconnected">Not Set</span>';
+          }
+
+          if (bankDetails.opay_number || bankDetails.palmpay_number || bankDetails.kuda_number) {
+            mobileMoneyStatus.innerHTML = '<span class="badge badge-connected">Set</span>';
+          } else {
+            mobileMoneyStatus.innerHTML = '<span class="badge badge-disconnected">Not Set</span>';
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load user info:', e);
+      }
     }
-    checkAdmin();
+
+    // ─── RESEND OTP ──────────────────────────────────────────
+    async function resendOTP() {
+      try {
+        const data = await apiFetch('/auth/resend-otp', { method: 'POST' });
+        if (data.success) {
+          alert('✅ Verification code sent to your email. Please check your inbox.');
+        } else {
+          alert('❌ Failed to resend OTP. Please try again later.');
+        }
+      } catch (e) {
+        alert('❌ Error resending OTP.');
+      }
+    }
 
     // ─── NAVIGATION ──────────────────────────────────────────
     function showSection(section) {
       const sections = ['overview','orders','pipeline','referrals','products','kb','broadcast','settings'];
-      const containerIds = { overview:'overviewSection', orders:'ordersSection', pipeline:'pipelineSection', referrals:'referralsSection', products:'productsSection', kb:'kbSection', broadcast:'broadcastSection', settings:'settingsSection' };
+      const containerIds = {
+        overview:'overviewSection',
+        orders:'ordersSection',
+        pipeline:'pipelineSection',
+        referrals:'referralsSection',
+        products:'productsSection',
+        kb:'kbSection',
+        broadcast:'broadcastSection',
+        settings:'settingsSection'
+      };
       sections.forEach(s => document.getElementById(containerIds[s]).style.display = (s===section)?'block':'none');
       document.querySelectorAll('.slink').forEach(a => a.classList.remove('active'));
       const nav = document.getElementById('nav-'+section); if(nav) nav.classList.add('active');
-      const titles = { overview:'Dashboard', orders:'Orders', pipeline:'Pipeline', referrals:'Referrals', products:'Products', kb:'Knowledge Base', broadcast:'Broadcast', settings:'Settings' };
+      const titles = {
+        overview:'Dashboard',
+        orders:'Orders',
+        pipeline:'Pipeline',
+        referrals:'Referrals',
+        products:'Products',
+        kb:'Knowledge Base',
+        broadcast:'Broadcast',
+        settings:'Settings'
+      };
       document.getElementById('pageTitle').textContent = titles[section] || 'Dashboard';
       document.getElementById('pageSub').textContent = section === 'orders' ? 'Order → Payment → Delivery → Satisfaction' : '';
-      const loaders = { overview:loadAnalytics, orders:loadOrders, pipeline:loadPipeline, referrals:loadReferrals, products:loadProducts, kb:loadKB, broadcast:loadBroadcastHistory, settings:loadSettings };
+      const loaders = {
+        overview:loadAnalytics,
+        orders:loadOrders,
+        pipeline:loadPipeline,
+        referrals:loadReferrals,
+        products:loadProducts,
+        kb:loadKB,
+        broadcast:loadBroadcastHistory,
+        settings:loadSettings
+      };
       if (loaders[section]) loaders[section]();
     }
 
@@ -646,9 +783,10 @@
             <div><strong>Fallback:</strong> ${settings.fallback_msg||'Default'}</div>
             <div><strong>WhatsApp Connected:</strong> ${settings.wa_phone_id ? '✅' : '❌'}</div>
             <div><strong>Paystack Connected:</strong> ${settings.paystack_secret ? '✅' : '❌'}</div>
+            <div><strong>Bank Details:</strong> ${settings.bank_details ? '✅ Set' : '❌ Not Set'}</div>
           </div>
           <div style="margin-top:16px;">
-            <button onclick="alert('Edit settings coming soon!')" class="btn-o">Edit Settings</button>
+            <button onclick="window.location.href='settings.html'" class="btn-o">Edit Settings</button>
           </div>
         `;
         container.innerHTML = html;
@@ -680,12 +818,14 @@
 
     // ─── INIT ──────────────────────────────────────────────────
     window.onload = function() {
-      showSection('overview');
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-      }, { threshold: 0.1 });
-      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-      setInterval(refreshAll, 30000);
+      loadUserInfo().then(() => {
+        showSection('overview');
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        setInterval(refreshAll, 30000);
+      });
     };
 
     window.showSection = showSection;
@@ -705,6 +845,7 @@
     window.loadKB = loadKB;
     window.loadBroadcastHistory = loadBroadcastHistory;
     window.loadSettings = loadSettings;
+    window.resendOTP = resendOTP;
   </script>
 </body>
 </html>
