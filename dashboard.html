@@ -165,6 +165,17 @@
     }
     .btn-o:hover { background: var(--border-color); }
     .btn-sm { font-size: 0.7rem; padding: 0.3rem 0.7rem; }
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-danger:hover { opacity: 0.8; }
     .status-badge {
       padding: 0.2rem 0.6rem;
       border-radius: 30px;
@@ -183,6 +194,23 @@
       border: 1px solid var(--border-color);
     }
     .order-row .flex { margin-top: 0.5rem; }
+    .product-row {
+      background: var(--bg-secondary);
+      padding: 0.8rem;
+      border-radius: 12px;
+      margin-bottom: 0.8rem;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .product-row .info { flex: 1; min-width: 150px; }
+    .product-row .info .name { font-weight: 700; }
+    .product-row .info .price { color: var(--accent); font-weight: 600; }
+    .product-row .info .stock { font-size: 0.75rem; color: var(--text-muted); }
+    .product-row .actions { display: flex; gap: 0.3rem; flex-wrap: wrap; }
     .payment-bar {
       display: flex;
       flex-wrap: wrap;
@@ -192,6 +220,7 @@
       border-radius: 12px;
       border: 1px solid var(--border-color);
       margin-bottom: 1.2rem;
+      align-items: center;
     }
     .payment-bar .item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
     .payment-bar .item .label { color: var(--text-muted); font-weight: 600; }
@@ -252,6 +281,7 @@
       .sidebar { width: 100%; position: relative; height: auto; border-right: none; }
       .main { margin-left: 0; }
       .payment-bar { flex-direction: column; }
+      .product-row { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -291,7 +321,7 @@
       <button onclick="refreshAll()" class="btn-o">🔄 Refresh</button>
     </div>
 
-    <!-- Payment / Settings Bar -->
+    <!-- PAYMENT BAR -->
     <div class="payment-bar" id="paymentBar">
       <div class="item"><span class="label">💳 Paystack:</span><span class="value" id="paystackStatus"><span class="badge badge-disconnected">Not Connected</span></span></div>
       <div class="item"><span class="label">🏦 Bank Details:</span><span class="value" id="bankStatus"><span class="badge badge-disconnected">Not Set</span></span></div>
@@ -299,12 +329,12 @@
       <div class="item" style="margin-left:auto;"><button onclick="showSection('settings')" class="btn-o btn-sm">⚙️ Manage</button></div>
     </div>
 
-    <!-- Verification Banner -->
+    <!-- VERIFICATION BANNER -->
     <div id="verificationBanner" class="verification-banner" style="display:none;">
       ⚠️ Your email is not verified. Please <a onclick="resendOTP()">click here</a> to resend the verification code.
     </div>
 
-    <!-- Overview Section -->
+    <!-- OVERVIEW -->
     <div id="overviewSection">
       <div class="stat-grid reveal" id="statsGrid">
         <div class="stat-box"><div class="label">Total Orders</div><div class="value" id="stat-orders">-</div></div>
@@ -326,7 +356,7 @@
       </div>
     </div>
 
-    <!-- Orders Section -->
+    <!-- ORDERS -->
     <div id="ordersSection" style="display:none;">
       <div class="card reveal">
         <h3>📦 Orders</h3>
@@ -335,12 +365,12 @@
       </div>
     </div>
 
-    <!-- Pipeline Section -->
+    <!-- PIPELINE -->
     <div id="pipelineSection" style="display:none;">
       <div class="card reveal"><h3>💼 Sales Pipeline</h3><div id="pipelineContent">Loading...</div></div>
     </div>
 
-    <!-- Referrals Section -->
+    <!-- REFERRALS -->
     <div id="referralsSection" style="display:none;">
       <div class="card reveal">
         <h3>🤝 Referrals</h3>
@@ -356,17 +386,53 @@
       </div>
     </div>
 
-    <!-- Products Section -->
+    <!-- PRODUCTS with Edit/Delete/Disable -->
     <div id="productsSection" style="display:none;">
-      <div class="card reveal"><h3>🛍️ Products</h3><div id="productsList">Loading...</div></div>
+      <div class="card reveal">
+        <h3>🛍️ Products</h3>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <button onclick="showAddProduct()" class="btn-g">➕ Add Product</button>
+          <button onclick="loadProducts()" class="btn-o">🔄 Refresh</button>
+        </div>
+        <div id="productsList">Loading...</div>
+      </div>
+      <!-- Add Product Modal -->
+      <div id="addProductModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem;">
+        <div style="background:var(--bg-secondary);border-radius:var(--radius);padding:2rem;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;">
+          <h3 style="margin-bottom:1rem;">Add Product</h3>
+          <form id="addProductForm" style="display:grid;gap:0.8rem;">
+            <input id="prodName" placeholder="Product Name *" required style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);"/>
+            <input id="prodPrice" placeholder="Price *" required type="number" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);"/>
+            <input id="prodSalePrice" placeholder="Sale Price (optional)" type="number" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);"/>
+            <input id="prodStock" placeholder="Stock (optional)" type="number" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);"/>
+            <select id="prodCategory" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);">
+              <option value="general">General</option>
+              <option value="fashion">Fashion</option>
+              <option value="electronics">Electronics</option>
+              <option value="food">Food</option>
+              <option value="beauty">Beauty</option>
+              <option value="digital">Digital</option>
+            </select>
+            <select id="prodType" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);">
+              <option value="physical">Physical</option>
+              <option value="digital">Digital</option>
+            </select>
+            <textarea id="prodDesc" placeholder="Description (optional)" style="padding:0.6rem;border:1px solid var(--border-color);border-radius:8px;background:var(--input-bg);color:var(--text-primary);min-height:60px;"></textarea>
+            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+              <button type="submit" class="btn-g">✅ Add Product</button>
+              <button type="button" onclick="closeAddProduct()" class="btn-o">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <!-- Knowledge Base Section -->
+    <!-- KNOWLEDGE BASE -->
     <div id="kbSection" style="display:none;">
       <div class="card reveal"><h3>📚 Knowledge Base</h3><div id="kbList">Loading...</div></div>
     </div>
 
-    <!-- Broadcast Section -->
+    <!-- BROADCAST -->
     <div id="broadcastSection" style="display:none;">
       <div class="card reveal">
         <h3>📣 Broadcast</h3>
@@ -379,42 +445,32 @@
       </div>
     </div>
 
-    <!-- Settings Section – Includes WhatsApp Connect -->
+    <!-- SETTINGS -->
     <div id="settingsSection" style="display:none;">
       <div class="card reveal">
         <h3>⚙️ Settings</h3>
         <div id="settingsContent">Loading...</div>
       </div>
-
-      <!-- WhatsApp Connect Card -->
+      <!-- WhatsApp Connect -->
       <div class="card reveal">
         <h4>📱 WhatsApp Connection</h4>
         <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.8rem;">
           Connect your own WhatsApp number to receive messages directly. No Meta App required – just scan a QR code.
         </p>
-
-        <!-- Current Status -->
         <div class="status-row" id="whatsappStatusRow">
           <span class="label">Status:</span>
           <span class="value" id="whatsappStatusValue" style="color:var(--text-muted);">Checking...</span>
         </div>
-
-        <!-- Connect Form -->
         <div id="whatsappConnectForm" style="margin-top:0.8rem;">
           <div class="input-group">
             <input type="tel" id="whatsappPhoneInput" placeholder="+2348012345678" />
             <button onclick="connectWhatsApp()" class="btn-g" id="connectWhatsAppBtn">🔗 Connect Number</button>
           </div>
-          <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;">
-            Include country code. Example: +2348012345678
-          </p>
+          <p style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;">Include country code. Example: +2348012345678</p>
         </div>
-
-        <!-- Disconnect Button -->
         <div id="whatsappDisconnectForm" style="display:none;margin-top:0.8rem;">
           <button onclick="disconnectWhatsApp()" class="btn-o" style="border-color:#ef4444;color:#ef4444;">🔌 Disconnect Number</button>
         </div>
-
         <div id="whatsappMessage" style="margin-top:0.8rem;font-size:0.85rem;display:none;"></div>
       </div>
     </div>
@@ -474,7 +530,7 @@
         if (data.success) {
           const biz = data.business;
           const settings = data.business.settings || {};
-          document.getElementById('sidebarUser').textContent = `@${biz.username}`;
+          document.getElementById('sidebarUser').textContent = biz.business_name || `@${biz.username}`;
           document.getElementById('sidebarPlan').textContent = biz.plan.toUpperCase();
           document.title = `SalesZap • ${biz.business_name || 'Dashboard'}`;
           window.currentBusiness = biz;
@@ -499,7 +555,7 @@
           }
 
           const bankDetails = settings.bank_details || {};
-          if (bankDetails.bank_name || bankDetails.account_number || bankDetails.bank_accounts?.length) {
+          if (bankDetails.bank_name || bankDetails.account_number || (bankDetails.bank_accounts && bankDetails.bank_accounts.length)) {
             bankStatus.innerHTML = '<span class="badge badge-connected">Set</span>';
           } else {
             bankStatus.innerHTML = '<span class="badge badge-disconnected">Not Set</span>';
@@ -513,9 +569,25 @@
 
           // WhatsApp connection status
           updateWhatsAppStatus(settings);
+
+          // Check admin
+          checkAdmin();
         }
       } catch (e) {
         console.error('Failed to load user info:', e);
+      }
+    }
+
+    // ─── CHECK ADMIN ──────────────────────────────────────────
+    async function checkAdmin() {
+      try {
+        const data = await apiFetch('/admin/me');
+        if (data.success && data.role) {
+          document.getElementById('nav-admin').style.display = 'block';
+        }
+      } catch(e) {
+        // Not admin – hide link
+        document.getElementById('nav-admin').style.display = 'none';
       }
     }
 
@@ -530,14 +602,9 @@
         statusEl.style.color = '#10b981';
         connectForm.style.display = 'none';
         disconnectForm.style.display = 'block';
-      } else if (settings?.wa_phone_id === null || settings?.wa_phone_id === undefined) {
+      } else {
         statusEl.textContent = '❌ Not Connected';
         statusEl.style.color = '#ef4444';
-        connectForm.style.display = 'block';
-        disconnectForm.style.display = 'none';
-      } else {
-        statusEl.textContent = '⏳ Checking...';
-        statusEl.style.color = '#f59e0b';
         connectForm.style.display = 'block';
         disconnectForm.style.display = 'none';
       }
@@ -548,13 +615,11 @@
       const phoneInput = document.getElementById('whatsappPhoneInput');
       const phoneNumber = phoneInput.value.trim();
       const btn = document.getElementById('connectWhatsAppBtn');
-      const msgEl = document.getElementById('whatsappMessage');
 
       if (!phoneNumber) {
         showMessage('whatsappMessage', '⚠️ Please enter your phone number.', 'error');
         return;
       }
-
       if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
         showMessage('whatsappMessage', '⚠️ Please include country code. Example: +2348012345678', 'error');
         return;
@@ -562,25 +627,17 @@
 
       btn.disabled = true;
       btn.textContent = '⏳ Connecting...';
-      msgEl.style.display = 'none';
 
       try {
         const data = await apiFetch('/dashboard/connect-whatsapp', {
           method: 'POST',
           body: JSON.stringify({ phoneNumber })
         });
-
         if (data.success) {
           if (data.method === 'redirect' && data.redirectUrl) {
             showMessage('whatsappMessage', '✅ Redirecting to connect your WhatsApp...', 'success');
-            // Open in new tab or redirect
             window.open(data.redirectUrl, '_blank');
-            // Poll for connection status
-            setTimeout(() => {
-              loadUserInfo();
-              btn.disabled = false;
-              btn.textContent = '🔗 Connect Number';
-            }, 5000);
+            setTimeout(() => { loadUserInfo(); btn.disabled = false; btn.textContent = '🔗 Connect Number'; }, 5000);
           } else {
             showMessage('whatsappMessage', '✅ WhatsApp connected successfully!', 'success');
             loadUserInfo();
@@ -601,15 +658,9 @@
 
     // ─── DISCONNECT WHATSAPP ──────────────────────────────────
     async function disconnectWhatsApp() {
-      if (!confirm('Are you sure you want to disconnect your WhatsApp number? You will stop receiving messages on this number.')) return;
-
-      const msgEl = document.getElementById('whatsappMessage');
-
+      if (!confirm('Are you sure you want to disconnect your WhatsApp number?')) return;
       try {
-        const data = await apiFetch('/dashboard/disconnect-whatsapp', {
-          method: 'POST'
-        });
-
+        const data = await apiFetch('/dashboard/disconnect-whatsapp', { method: 'POST' });
         if (data.success) {
           showMessage('whatsappMessage', '✅ WhatsApp number disconnected successfully.', 'success');
           loadUserInfo();
@@ -824,7 +875,9 @@
       const linkEl = document.getElementById('refLink');
       try {
         const data = await apiFetch('/dashboard/referrals');
-        linkEl.textContent = data.referralLink || '—';
+        // Fix referral link to use correct domain
+        const frontendUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+        linkEl.textContent = data.referralLink ? data.referralLink.replace(/https:\/\/[^\/]+/, frontendUrl) : (frontendUrl + '?ref=' + (data.referralCode || ''));
         let html = `<div class="stat-grid"><div class="stat-box"><div class="label">Total Referrals</div><div class="value">${data.totalReferrals||0}</div></div></div>`;
         if (data.referrals && data.referrals.length) {
           html += `<h4 style="margin:14px 0 6px;font-size:13px;">Recent Referrals</h4>`;
@@ -837,7 +890,7 @@
         container.innerHTML = html;
       } catch(e) {
         container.innerHTML = '<span style="color:#ef4444;">Failed to load referrals.</span>';
-        linkEl.textContent = (window.location.origin || 'https://yourdomain.com') + '?ref=YOURCODE';
+        linkEl.textContent = window.location.origin + '/?ref=YOURCODE';
       }
     }
     function copyRefLink() {
@@ -857,19 +910,142 @@
         const data = await apiFetch('/api/products');
         const products = data.products || [];
         if (!products.length) {
-          container.innerHTML = '<p style="color:var(--text-muted);">No products yet.</p>';
+          container.innerHTML = '<p style="color:var(--text-muted);">No products yet. Add your first product below!</p>';
           return;
         }
         let html = '';
-        products.slice(0,20).forEach(p => {
-          html += `<div style="padding:8px 0;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;">
-            <span><strong>${p.name}</strong> ${p.sale_price ? `<span style="color:var(--accent);">🔥 ${p.currency||'NGN'} ${Number(p.sale_price).toLocaleString()}</span>` : ''} ${p.currency||'NGN'} ${Number(p.price).toLocaleString()}</span>
-            <span style="font-size:.75rem;color:var(--text-muted);">stock: ${p.stock??'∞'}</span>
-          </div>`;
+        products.forEach(p => {
+          const isActive = p.is_active !== false;
+          html += `
+            <div class="product-row">
+              <div class="info">
+                <div class="name">${p.name} ${!isActive ? '<span style="color:#ef4444;font-size:0.7rem;">[Disabled]</span>' : ''}</div>
+                <div class="price">${p.currency||'NGN'} ${Number(p.price).toLocaleString()} ${p.sale_price ? `🔥 ${Number(p.sale_price).toLocaleString()}` : ''}</div>
+                <div class="stock">Stock: ${p.stock !== null && p.stock !== undefined ? p.stock : '∞'} • ${p.category||'general'} • ${p.type||'physical'}</div>
+              </div>
+              <div class="actions">
+                <button onclick="editProduct('${p.id}')" class="btn-o btn-sm">✏️ Edit</button>
+                <button onclick="toggleProduct('${p.id}','${!isActive}')" class="${isActive ? 'btn-o' : 'btn-g'} btn-sm">${isActive ? '🔇 Disable' : '✅ Enable'}</button>
+                <button onclick="deleteProduct('${p.id}')" class="btn-danger btn-sm">🗑️ Delete</button>
+              </div>
+            </div>
+          `;
         });
         container.innerHTML = html;
       } catch(e) {
         container.innerHTML = '<span style="color:#ef4444;">Failed to load products.</span>';
+      }
+    }
+
+    // ─── ADD PRODUCT ──────────────────────────────────────────
+    function showAddProduct() {
+      document.getElementById('addProductModal').style.display = 'flex';
+    }
+    function closeAddProduct() {
+      document.getElementById('addProductModal').style.display = 'none';
+    }
+    document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('prodName').value.trim();
+      const price = parseFloat(document.getElementById('prodPrice').value);
+      const salePrice = document.getElementById('prodSalePrice').value ? parseFloat(document.getElementById('prodSalePrice').value) : null;
+      const stock = document.getElementById('prodStock').value ? parseInt(document.getElementById('prodStock').value) : null;
+      const category = document.getElementById('prodCategory').value;
+      const type = document.getElementById('prodType').value;
+      const description = document.getElementById('prodDesc').value.trim();
+
+      if (!name || !price) {
+        alert('Product name and price are required.');
+        return;
+      }
+
+      try {
+        const data = await apiFetch('/api/products', {
+          method: 'POST',
+          body: JSON.stringify({ name, price, salePrice, stock, category, type, description })
+        });
+        if (data.success) {
+          alert('✅ Product added successfully!');
+          closeAddProduct();
+          loadProducts();
+          document.getElementById('addProductForm').reset();
+        } else {
+          alert('❌ ' + (data.error || 'Failed to add product.'));
+        }
+      } catch (e) {
+        alert('❌ Network error. Please try again.');
+      }
+    });
+
+    // ─── EDIT PRODUCT ──────────────────────────────────────────
+    async function editProduct(productId) {
+      try {
+        const data = await apiFetch(`/api/products`);
+        const product = (data.products||[]).find(p => p.id === productId);
+        if (!product) return alert('Product not found.');
+        
+        const newName = prompt('Product name:', product.name);
+        if (newName === null) return;
+        const newPrice = prompt('Price:', product.price);
+        if (newPrice === null) return;
+        const newSalePrice = prompt('Sale price (or leave blank):', product.sale_price || '');
+        const newStock = prompt('Stock (or leave blank for unlimited):', product.stock !== null && product.stock !== undefined ? product.stock : '');
+        const newCategory = prompt('Category:', product.category || 'general');
+        
+        const updates = {
+          name: newName.trim(),
+          price: parseFloat(newPrice),
+          sale_price: newSalePrice ? parseFloat(newSalePrice) : null,
+          stock: newStock ? parseInt(newStock) : null,
+          category: newCategory || 'general'
+        };
+        
+        const res = await apiFetch(`/api/products/${productId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(updates)
+        });
+        if (res.success) {
+          alert('✅ Product updated successfully!');
+          loadProducts();
+        } else {
+          alert('❌ ' + (res.error || 'Failed to update.'));
+        }
+      } catch (e) {
+        alert('❌ Network error. Please try again.');
+      }
+    }
+
+    // ─── TOGGLE PRODUCT (Enable/Disable) ──────────────────────
+    async function toggleProduct(productId, enable) {
+      try {
+        const res = await apiFetch(`/api/products/${productId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ is_active: enable })
+        });
+        if (res.success) {
+          alert(enable ? '✅ Product enabled!' : '✅ Product disabled!');
+          loadProducts();
+        } else {
+          alert('❌ ' + (res.error || 'Failed to update.'));
+        }
+      } catch (e) {
+        alert('❌ Network error.');
+      }
+    }
+
+    // ─── DELETE PRODUCT ──────────────────────────────────────
+    async function deleteProduct(productId) {
+      if (!confirm('Are you sure you want to delete this product? This cannot be undone.')) return;
+      try {
+        const res = await apiFetch(`/api/products/${productId}`, { method: 'DELETE' });
+        if (res.success) {
+          alert('🗑️ Product deleted successfully!');
+          loadProducts();
+        } else {
+          alert('❌ ' + (res.error || 'Failed to delete.'));
+        }
+      } catch (e) {
+        alert('❌ Network error.');
       }
     }
 
@@ -949,14 +1125,15 @@
       try {
         const data = await apiFetch('/dashboard/settings');
         const settings = data.settings || {};
+        const biz = window.currentBusiness || {};
         let html = `
           <div style="display:grid;gap:12px;">
-            <div><strong>Business Name:</strong> ${settings.business_name||'N/A'}</div>
-            <div><strong>Plan:</strong> ${settings.plan||'free'}</div>
-            <div><strong>AI Enabled:</strong> ${settings.ai_enabled ? '✅' : '❌'}</div>
-            <div><strong>Auto-reply:</strong> ${settings.auto_reply ? '✅' : '❌'}</div>
-            <div><strong>Greeting:</strong> ${settings.greeting_msg||'Default'}</div>
-            <div><strong>Fallback:</strong> ${settings.fallback_msg||'Default'}</div>
+            <div><strong>Business Name:</strong> ${biz.business_name || 'N/A'}</div>
+            <div><strong>Plan:</strong> ${biz.plan || 'free'}</div>
+            <div><strong>AI Enabled:</strong> ${settings.ai_enabled !== false ? '✅' : '❌'}</div>
+            <div><strong>Auto-reply:</strong> ${settings.auto_reply !== false ? '✅' : '❌'}</div>
+            <div><strong>Greeting:</strong> ${settings.greeting_msg || 'Default'}</div>
+            <div><strong>Fallback:</strong> ${settings.fallback_msg || 'Default'}</div>
             <div><strong>WhatsApp Connected:</strong> ${settings.wa_phone_id ? '✅' : '❌'}</div>
             <div><strong>Paystack Connected:</strong> ${settings.paystack_secret ? '✅' : '❌'}</div>
             <div><strong>Bank Details:</strong> ${settings.bank_details ? '✅ Set' : '❌ Not Set'}</div>
@@ -1001,6 +1178,7 @@
       });
     };
 
+    // Expose functions
     window.showSection = showSection;
     window.refreshAll = refreshAll;
     window.logout = logout;
@@ -1021,6 +1199,11 @@
     window.resendOTP = resendOTP;
     window.connectWhatsApp = connectWhatsApp;
     window.disconnectWhatsApp = disconnectWhatsApp;
+    window.showAddProduct = showAddProduct;
+    window.closeAddProduct = closeAddProduct;
+    window.editProduct = editProduct;
+    window.toggleProduct = toggleProduct;
+    window.deleteProduct = deleteProduct;
   </script>
 </body>
 </html>
